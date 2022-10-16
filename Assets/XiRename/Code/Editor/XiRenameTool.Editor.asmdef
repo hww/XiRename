@@ -1,0 +1,19 @@
+{
+    "name": "XiRenameTool.Editor",
+    "rootNamespace": "XiRenameTool.Editor",
+    "references": [
+        "GUID:20b5fb66216b0de408c034afdc4f3a99",
+        "GUID:776d03a35f1b52c4a9aed9f56d7b4229",
+        "GUID:f88fb04354076c646a4107a491394033",
+        "GUID:985d9420196427f489e431e9b962b1d3"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
