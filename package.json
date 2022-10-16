@@ -1,9 +1,9 @@
 {
   "name": "com.hww.xirename",
-  "displayName": ""XiRename",",
+  "displayName": ""XiRename",
   "version": "1.2.5",
   "unity": "2021.1",
-  "description": "XiRename", is a renaming tool Unity.",
+  "description": "XiRename, is a renaming tool Unity.",
   "license": "MIT",
   "author": "hww <valery.hww@gmail.com> (https://github.com/hww)",
   "keywords": [
