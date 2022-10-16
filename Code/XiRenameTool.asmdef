@@ -1,6 +1,6 @@
 {
-    "name": "XiRename",
-    "rootNamespace": "XiRename",
+    "name": "XiRenameTool",
+    "rootNamespace": "XiRenameTool",
     "references": [
         "GUID:20b5fb66216b0de408c034afdc4f3a99",
         "GUID:776d03a35f1b52c4a9aed9f56d7b4229",
