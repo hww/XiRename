@@ -1,0 +1,192 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6091002058581f45a90415dd14a32b2, type: 3}
+  m_Name: XiRenameSettings
+  m_EditorClassIdentifier: 
+  fieldOrder: 00000000010000000300000002000000
+  nameConvention: 0
+  prefixPrecision: 2
+  suffixPrecision: 2
+  ignorePath: []
+  fileTypes:
+  - Name: Models/FBX
+    Category: Models
+    Description: 
+    extentions: fbx, ma, mb
+    prefixes:
+    - Name: Rig
+      Value: RIG
+    - Name: Skeleton
+      Value: SKEL
+    - Name: Skeletal Mesh
+      Value: SK
+    - Name: Static Mesh
+      Value: SM
+    - Name: Weapons
+      Value: WP
+    - Name: Vehicles
+      Value: VH
+    - Name: Characters
+      Value: CH
+    suffixes: []
+  - Name: Models/MAX
+    Category: Models
+    Description: 
+    extentions: max
+    prefixes: []
+    suffixes:
+    - Name: Mesh Collider
+      Value: collider
+    - Name: Mesh
+      Value: _mesh_lod0*
+  - Name: Animations
+    Category: Animations
+    Description: 
+    extentions: fbx, ma, mb
+    prefixes:
+    - Name: Morph Target
+      Value: MT
+    - Name: Avatar Mask
+      Value: AM
+    - Name: Animation Controller
+      Value: AC
+    - Name: Animation Clip
+      Value: A
+    suffixes: []
+  - Name: Artificial Intelligence
+    Category: Artificial Intelligence
+    Description: 
+    extentions: asset
+    prefixes:
+    - Name: EnvQueryContext
+      Value: EQC
+    - Name: Environment Query
+      Value: EQS
+    - Name: Task
+      Value: BTTask
+    - Name: Service
+      Value: BTService
+    - Name: Decorator
+      Value: BTDecorator
+    - Name: Blackboard
+      Value: BB
+    - Name: Behavior Tree
+      Value: BT
+    - Name: AI Controller
+      Value: AIC
+    suffixes:
+    - Name: EnvQueryContext
+      Value: Context
+  - Name: Prefabs
+    Category: Prefabs
+    Description: 
+    extentions: prefab
+    prefixes: []
+    suffixes:
+    - Name: Scriptable Object
+      Value: SO
+    - Name: Prefab Instance
+      Value: I
+    - Name: Prefab
+      Value: 
+  - Name: Textures
+    Category: Textures
+    Description: 
+    extentions: tga, bmp, jpg, png, gif, psd
+    prefixes:
+    - Name: Texture Light Profile
+      Value: TLP_
+    - Name: Cube Render Target
+      Value: RTC
+    - Name: Render Target
+      Value: RT
+    - Name: Media Texture
+      Value: MT
+    - Name: Texture Cube
+      Value: TC
+    - Name: Texture
+      Value: T_
+    suffixes:
+    - Name: Texture (Packed)
+      Value: '?'
+    - Name: Texture (Specular)
+      Value: S
+    - Name: Texture (Mask)
+      Value: M
+    - Name: Texture (Mask)
+      Value: E
+    - Name: Texture (Bump)
+      Value: B
+    - Name: Texture (Ambient Occlusion)
+      Value: AO
+    - Name: Texture (Alpha/Opacity)
+      Value: A
+    - Name: Texture (Roughness)
+      Value: R
+    - Name: Texture (Normal)
+      Value: N
+    - Name: Texture (Diffuse/Albedo/Base Color
+      Value: D
+  - Name: Miscellaneous
+    Category: Miscellaneous
+    Description: 
+    extentions: asset
+    prefixes:
+    - Name: Post Process Volume Profile
+      Value: PP
+    - Name: Universal Render Pipeline Asset
+      Value: URP
+    suffixes: []
+  - Name: Physics
+    Category: Physics
+    Description: 
+    extentions: physicMaterial
+    prefixes:
+    - Name: Physical Material
+      Value: PM
+    suffixes: []
+  - Name: Audio
+    Category: Audio
+    Description: 
+    extentions: mp3,wav
+    prefixes:
+    - Name: Audio (Dialogue Voice)
+      Value: DV
+    - Name: Audio (Mixer)
+      Value: MIX
+    - Name: Audio (Clip)
+      Value: A
+    - Name: Audio (Class)
+      Value: 
+    suffixes: []
+  - Name: User Interface
+    Category: User Interface
+    Description: 
+    extentions: asset
+    prefixes:
+    - Name: UI (Sprite)
+      Value: T
+    - Name: UI (Font)
+      Value: Font
+    - Name: UI (Interface)
+      Value: UI
+    suffixes:
+    - Name: UI (Sprite)
+      Value: GUI
+  - Name: Effects
+    Category: Effects
+    Description: 
+    extentions: prefab
+    prefixes:
+    - Name: FX (Particle System)
+      Value: PS
+    suffixes: []
