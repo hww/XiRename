@@ -6,7 +6,7 @@
 [![](https://img.shields.io/github/license/hww/XiRename.svg)](https://github.com/hww/XiRename/blob/master/LICENSE)
 [![semantic-release: angular](https://img.shields.io/badge/semantic--release-angular-e10079?logo=semantic-release)](https://github.com/semantic-release/semantic-release)
 
-![Title Image](Docs/title.png)
+![Title Image](Docs/title_image.png)
 
 Simple asstes renaming tool by [hww](https://github.com/hww)
 
