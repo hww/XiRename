@@ -199,17 +199,17 @@ namespace XiRenameTool
                             lst[cnt++] = name;
                         break;
                     case ETokenType.Prefix:
-                        str = prefix.GetString(prefix.Counter + idx);
+                        str = prefix.GetString(idx);
                         if (!string.IsNullOrEmpty(str))
                             lst[cnt++] = str;
                         break;
                     case ETokenType.Suffix:
-                        str = suffix.GetString(suffix.Counter + idx);
+                        str = suffix.GetString(idx);
                         if (!string.IsNullOrEmpty(str))
                             lst[cnt++] = str;
                         break;
                     case ETokenType.Variant:
-                        str = variant.GetString(variant.Counter + idx);
+                        str = variant.GetString(idx);
                         if (!string.IsNullOrEmpty(str))
                             lst[cnt++] = str;
                         break;
@@ -465,7 +465,7 @@ namespace XiRenameTool
 
 
         /// <summary>True if has counter, false if not.</summary>
-        public bool WithCounter => type == ETokenType.Variant || type == ETokenType.Prefix;
+        public bool WithCounter => type != ETokenType.Name;
 
         /// <summary>True if has pop up, false if not.</summary>
         public bool WithPopUp => (type == ETokenType.Prefix || type == ETokenType.Suffix) && Options.Count>0; 
@@ -630,9 +630,10 @@ namespace XiRenameTool
             get => counter.ToString(formats[precision]);
             set
             {
-                var nCounter = int.Parse(value);
-                if (counter != nCounter)
+                var nCounter = 0;
+                if (int.TryParse(value, out nCounter) && counter != nCounter)
                 {
+                    counter = nCounter;
                     precision = (int)value.Replace(" ", "").Length;
                     XiRename.DoUpdateGUI = true;
                 }
@@ -648,7 +649,15 @@ namespace XiRenameTool
         public string DeltaString
         {
             get => delta.ToString();
-            set { delta = int.Parse(value); XiRename.DoUpdateGUI = true; }
+            set {
+                var nDelta = 0;
+                
+                if (int.TryParse(value, out nDelta) && delta != nDelta)
+                {
+                    delta = nDelta;
+                    XiRename.DoUpdateGUI = true;
+                }
+            }
         }
 
 
