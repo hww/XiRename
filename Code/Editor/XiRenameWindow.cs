@@ -11,13 +11,14 @@ namespace XiRenameTool.Editor
     /// <summary>Form for viewing the xi rename.</summary>
     public class XiRenameWindow : EditorWindow
     {
+        private static Texture banner;
+
         [MenuItem("Xi/XiRename")]
 
         /// <summary>Shows the window.</summary>
         public static void ShowWindow()
         {
             EditorWindow.GetWindow(typeof(XiRenameWindow));
-
         }
 
         public ReorderableList list = null;
@@ -51,7 +52,7 @@ namespace XiRenameTool.Editor
             XiRename.ValidateName(item, XiRename.FileCategory);
             rect.y += 2;
             var rect2 = new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight);
-            if (item.ValidationStatus == EFileResult.Ignore || item.ValidationStatus == EFileResult.Undefined)
+            if (!item.IsRenamable)
             {
                 EditorGUI.BeginDisabledGroup(true);
                 EditorGUI.TextField(rect2, item.Name);
@@ -59,8 +60,20 @@ namespace XiRenameTool.Editor
             }
             else
             {
-                item.ResultName = XiRename.GetString(item, index, XiRename.FileCategory);
+                item.ResultName = XiRename.GetString(item, item.Index, XiRename.FileCategory);
                 item.ResultName = EditorGUI.TextField(rect2, item.ResultName);
+            }
+        }
+
+        /// <summary>Executes the 'restrucure list' action.</summary>
+        void OnRestrucureList()
+        {
+            var index = 0;
+            foreach (var item in selectedFiles)
+            {
+                XiRename.ValidateName(item, XiRename.FileCategory);
+                if (item.IsRenamable)
+                    item.Index = index++;
             }
         }
 
@@ -73,6 +86,7 @@ namespace XiRenameTool.Editor
         /// <summary>Called when the object becomes enabled and active.</summary>
         private void OnEnable()
         {
+            banner = (Texture)Resources.Load("XiRename/T_Banner_Sprite", typeof(Texture));
             list = new ReorderableList(selectedFiles, typeof(FileDescriptor));
             list.drawElementCallback = OrderCallBack;
             Selection.selectionChanged += OnSelectionChanged;
@@ -92,6 +106,7 @@ namespace XiRenameTool.Editor
         /// <summary>Called for rendering and handling GUI events.</summary>
         void OnGUI()
         {
+            GUILayout.Box(banner);
             DrawUILine(uiLineColor);
             GUILayout.Label("Name Tool", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox("Choose one of the possible file naming conventions.", MessageType.None);
@@ -122,6 +137,7 @@ namespace XiRenameTool.Editor
             }
             else
             {
+                OnRestrucureList();
                 list?.DoLayoutList();
             }
             // - - - - - - - - - - - - - - - - - -
@@ -160,7 +176,7 @@ namespace XiRenameTool.Editor
 
         private void RenameAsset(FileDescriptor item, bool dryRun)
         {
-            if (item.ValidationStatus == EFileResult.Undefined || item.ValidationStatus == EFileResult.Ignore)
+            if (!item.IsRenamable)
                 return;
 
             var oldPath = item.OriginalPath;
@@ -227,12 +243,12 @@ namespace XiRenameTool.Editor
             {
 
                 if (designator.WithPopUp)
-                    designator.PrefixIndex = EditorGUILayout.Popup("Starts Options:", designator.PrefixIndex, designator.PrefixOptions);
+                    designator.PrefixIndex = EditorGUILayout.Popup("Convention:", designator.PrefixIndex, designator.PrefixOptions);
                 designator.Starts = EditorGUILayout.TextField("Starts:", designator.Starts);
 
                 if (designator.WithCounter)
                 {
-                    designator.UseCounter = EditorGUILayout.Toggle("Has Counter:", designator.UseCounter);
+                    designator.UseCounter = EditorGUILayout.Toggle("Counter:", designator.UseCounter);
                     if (designator.UseCounter)
                     {
                         designator.ValueString = EditorGUILayout.TextField("Value:", designator.ValueString);
