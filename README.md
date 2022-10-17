@@ -46,3 +46,36 @@ The current state of the project _Alpha_. The tool has not been tested at the mo
 - [ ] Per project verification tool
 
 
+## Defaults with API
+
+The file name consists of tokens (name, prefix, suffix, version or variant). The order of the tokens must be determined.
+
+```C#
+fieldOrder.Clear();
+fieldOrder.Add(ETokenType.Prefix);
+fieldOrder.Add(ETokenType.Name);
+fieldOrder.Add(ETokenType.Variant);
+fieldOrder.Add(ETokenType.Suffix);
+```
+
+Clear all existing file types.
+
+```C#
+fileTypes.Clear();
+```            
+
+Create a new type Textures2D with category Textures.
+
+```C#
+  kind = Define("Textures2D", "Textures", ".tga, .bmp, .jpg, .png, .gif, .psd");
+```
+
+Let's add some prefixes and suffixes
+
+```C#
+kind.DefinePreffix("Render Target", "RT");
+kind.DefinePreffix("Cube Render Target", "RTC");
+kind.DefinePreffix("Texture Light Profile", "TLP");
+kind.DefineSuffix("Texture (Diffuse/Albedo/Base Color", "D");
+kind.DefineSuffix("Texture (Normal)", "N");
+```
