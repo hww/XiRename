@@ -160,6 +160,9 @@ namespace XiRenameTool.Editor
 
         private void RenameAsset(FileDescriptor item, bool dryRun)
         {
+            if (item.ValidationStatus == EFileResult.Undefined || item.ValidationStatus == EFileResult.Ignore)
+                return;
+
             var oldPath = item.OriginalPath;
             var newName = item.ResultNameWithExtention;
 
