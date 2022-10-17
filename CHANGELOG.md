@@ -1,3 +1,10 @@
+## [1.0.4](https://github.com/hww/XiRename/compare/v1.0.3...v1.0.4) (2022-10-17)
+
+
+### Bug Fixes
+
+* **code:** Try catch for parsers added ([8ad0cf5](https://github.com/hww/XiRename/commit/8ad0cf5024ec9c1276f2463968b1cb8d6a34ed69))
+
 ## [1.0.3](https://github.com/hww/XiRename/compare/v1.0.2...v1.0.3) (2022-10-17)
 
 
