@@ -21,7 +21,7 @@ MonoBehaviour:
   - Name: Models/FBX
     Category: Models
     Description: 
-    extentions: fbx, ma, mb
+    extentions: .fbx, .ma, .mb
     prefixes:
     - Name: Rig
       Value: RIG
@@ -41,7 +41,7 @@ MonoBehaviour:
   - Name: Models/MAX
     Category: Models
     Description: 
-    extentions: max
+    extentions: .max
     prefixes: []
     suffixes:
     - Name: Mesh Collider
@@ -51,7 +51,7 @@ MonoBehaviour:
   - Name: Animations
     Category: Animations
     Description: 
-    extentions: fbx, ma, mb
+    extentions: .fbx, .ma, .mb
     prefixes:
     - Name: Morph Target
       Value: MT
@@ -63,9 +63,9 @@ MonoBehaviour:
       Value: A
     suffixes: []
   - Name: Artificial Intelligence
-    Category: Artificial Intelligence
+    Category: Assets
     Description: 
-    extentions: asset
+    extentions: .asset
     prefixes:
     - Name: EnvQueryContext
       Value: EQC
@@ -86,25 +86,29 @@ MonoBehaviour:
     suffixes:
     - Name: EnvQueryContext
       Value: Context
+  - Name: Other Assets
+    Category: Assets
+    Description: 
+    extentions: .asset
+    prefixes:
+    - Name: Scriptable Object
+      Value: SO
+    suffixes: []
   - Name: Prefabs
     Category: Prefabs
     Description: 
-    extentions: prefab
-    prefixes: []
-    suffixes:
-    - Name: Scriptable Object
-      Value: SO
-    - Name: Prefab Instance
-      Value: I
+    extentions: .prefab
+    prefixes:
     - Name: Prefab
-      Value: 
+      Value: P
+    suffixes: []
   - Name: Textures
     Category: Textures
     Description: 
-    extentions: tga, bmp, jpg, png, gif, psd
+    extentions: .tga, .bmp, .jpg, .png, .gif, .psd
     prefixes:
     - Name: Texture Light Profile
-      Value: TLP_
+      Value: TLP
     - Name: Cube Render Target
       Value: RTC
     - Name: Render Target
@@ -114,7 +118,7 @@ MonoBehaviour:
     - Name: Texture Cube
       Value: TC
     - Name: Texture
-      Value: T_
+      Value: T
     suffixes:
     - Name: Texture (Packed)
       Value: '?'
@@ -139,7 +143,7 @@ MonoBehaviour:
   - Name: Miscellaneous
     Category: Miscellaneous
     Description: 
-    extentions: asset
+    extentions: .asset
     prefixes:
     - Name: Post Process Volume Profile
       Value: PP
@@ -149,7 +153,7 @@ MonoBehaviour:
   - Name: Physics
     Category: Physics
     Description: 
-    extentions: physicMaterial
+    extentions: .physicMaterial, .physicsMaterial2D
     prefixes:
     - Name: Physical Material
       Value: PM
@@ -157,12 +161,12 @@ MonoBehaviour:
   - Name: Audio
     Category: Audio
     Description: 
-    extentions: mp3,wav
+    extentions: .mp3, .wav
     prefixes:
-    - Name: Audio (Dialogue Voice)
-      Value: DV
+    - Name: Audio (Voice)
+      Value: AV
     - Name: Audio (Mixer)
-      Value: MIX
+      Value: AM
     - Name: Audio (Clip)
       Value: A
     - Name: Audio (Class)
@@ -171,7 +175,7 @@ MonoBehaviour:
   - Name: User Interface
     Category: User Interface
     Description: 
-    extentions: asset
+    extentions: .asset
     prefixes:
     - Name: UI (Sprite)
       Value: T
@@ -183,10 +187,34 @@ MonoBehaviour:
     - Name: UI (Sprite)
       Value: GUI
   - Name: Effects
-    Category: Effects
+    Category: Prefabs
     Description: 
-    extentions: prefab
+    extentions: .prefab
     prefixes:
     - Name: FX (Particle System)
       Value: PS
+    suffixes: []
+  - Name: Shaders
+    Category: Shaders
+    Description: 
+    extentions: .compute, .raytrace, .shadervariants, .shader
+    prefixes:
+    - Name: Shader
+      Value: SH
+    suffixes: []
+  - Name: Fonts
+    Category: Fonts
+    Description: 
+    extentions: .ttf, .otf
+    prefixes:
+    - Name: F
+      Value: F
+    suffixes: []
+  - Name: Scenes
+    Category: Schemes
+    Description: 
+    extentions: .scene, .scenetemplate
+    prefixes:
+    - Name: S
+      Value: F
     suffixes: []

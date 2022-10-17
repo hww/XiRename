@@ -1,3 +1,4 @@
+
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
@@ -8,18 +9,38 @@ namespace XiRenameTool
     /// <summary>Values that represent rename modes.</summary>
     public enum ERenameMode
     {
+        /// <summary>An enum constant representing the keep option.</summary>
         Keep,
+        /// <summary>An enum constant representing the rename option.</summary>
         Rename
     }
 
     /// <summary>Values that represent rename advanced modes.</summary>
     public enum ERenameAdvancedMode
     {
+        /// <summary>An enum constant representing the keep option.</summary>
         Keep,
+        /// <summary>An enum constant representing the add option.</summary>
         Add,
-        Replace,
-        Remove
+        /// <summary>An enum constant representing the replace option.</summary>
+        Replace
     }
+
+    /// <summary>Values that represent file results.</summary>
+    public enum EFileResult
+    {
+        /// <summary>An enum constant representing the undefined option.</summary>
+        Undefined,
+        /// <summary>An enum constant representing the ignore option.</summary>
+        Ignore,
+        /// <summary>An enum constant representing the invalid option.</summary>
+        Invalid,
+        /// <summary>An enum constant representing the valid option.</summary>
+        Valid
+    }
+
+
+    /// <summary>An xi rename.</summary>
     public class XiRename : MonoBehaviour
     {
         #region Load Settings
@@ -30,7 +51,7 @@ namespace XiRenameTool
         ///--------------------------------------------------------------------
         /// <summary>Gets options for controlling the operation.</summary>
         ///
-        /// <counter>The settings.</counter>
+        /// <value>The settings.</value>
         ///--------------------------------------------------------------------
 
         public static XiRenameSettings Settings => _settings;
@@ -42,18 +63,24 @@ namespace XiRenameTool
             LoadPreferences();
         }
 
-        public static List<ENameOrder> FieldOrder => Settings.fieldOrder;
+        ///--------------------------------------------------------------------
+        /// <summary>Gets the field order.</summary>
+        ///
+        /// <value>The field order.</value>
+        ///--------------------------------------------------------------------
 
-        ///------------------------------------------------------------------------
-        /// <summary>Searches for the first default asset path.</summary>
+        public static List<ETokenType> FieldOrder => Settings.fieldOrder;
+
+        ///--------------------------------------------------------------------
+        /// <summary>Searches for the first default asset filePath.</summary>
         ///
         /// <exception cref="Exception">    Thrown when an exception error
         ///                                 condition occurs.</exception>
         ///
-        /// <param fileName="packagePriority">True to package priority.</param>
+        /// <param fileName="packagePriority">  True to package priority.</param>
         ///
-        /// <returns>The found default asset path.</returns>
-        ///------------------------------------------------------------------------
+        /// <returns>The found default asset filePath.</returns>
+        ///--------------------------------------------------------------------
 
         public static XiRenameSettings FindDefaultAssetPath(bool packagePriority)
         {
@@ -85,12 +112,13 @@ namespace XiRenameTool
         }
 
         ///--------------------------------------------------------------------
-        /// <summary>Read the asset at the path if it is exists or return null
-        /// TODO Probably could be done by single Unity method (no time to
-        /// find)</summary>
+        /// <summary>Read the asset at the filePath if it is exists or return
+        /// null TODO Probably could be done by single Unity method (no time
+        /// to find)</summary>
         ///
-        /// <param fileName="loadPath">         Full pathname of the load file.</param>
-        /// <param fileName="existinPathList">  List of existin paths.</param>
+        /// <param fileName="loadPath">         Full pathname of the load
+        ///                                     file.</param>
+        /// <param fileName="existinPathList">List of existin paths.</param>
         ///
         /// <returns>The XiRenameSettings.</returns>
         ///--------------------------------------------------------------------
@@ -114,22 +142,23 @@ namespace XiRenameTool
         public static ERenameMode renameMode;
 
         /// <summary>The prefix.</summary>
-        public static Designator prefix = new Designator(true);
+        public static TokenGenerator prefix = new TokenGenerator(ETokenType.Prefix);
         /// <summary>The suffix.</summary>
-        public static Designator suffix = new Designator(true);
+        public static TokenGenerator suffix = new TokenGenerator(ETokenType.Suffix);
         /// <summary>The variant.</summary>
-        public static Designator variant = new Designator(false);
+        public static TokenGenerator variant = new TokenGenerator(ETokenType.Variant);
 
+        /// <summary>True to do update graphical user interface.</summary>
         public static bool DoUpdateGUI;
 
-        ///------------------------------------------------------------------------
+        ///--------------------------------------------------------------------
         /// <summary>Gets a hint.</summary>
         ///
         /// <param name="quantity">The quantity.</param>
         /// <param name="ellipse"> (Optional) The ellipse.</param>
         ///
         /// <returns>The hint.</returns>
-        ///------------------------------------------------------------------------
+        ///--------------------------------------------------------------------
 
         public static string GetHint(int quantity, string ellipse = "...")
         {
@@ -141,19 +170,19 @@ namespace XiRenameTool
             var lst = new string[6];
             for (var i = 0; i < quantity; i++)
             {
-                lst[cnt++] = GetString("file-name", i);
+                lst[cnt++] = GetString(name, i);
             }
             return string.Join(", ", lst, 0, cnt) + ellipse;
         }
 
-        ///------------------------------------------------------------------------
+        ///--------------------------------------------------------------------
         /// <summary>Gets a string.</summary>
         ///
         /// <param name="name">The name.</param>
         /// <param name="idx"> Zero-based index of the.</param>
         ///
         /// <returns>The string.</returns>
-        ///------------------------------------------------------------------------
+        ///--------------------------------------------------------------------
 
         public static string GetString(string name, int idx)
         {
@@ -165,21 +194,21 @@ namespace XiRenameTool
             {
                 switch (field)
                 {
-                    case ENameOrder.Name:
+                    case ETokenType.Name:
                         if (!string.IsNullOrEmpty(name))
                             lst[cnt++] = name;
                         break;
-                    case ENameOrder.Prefix:
+                    case ETokenType.Prefix:
                         str = prefix.GetString(prefix.Counter + idx);
                         if (!string.IsNullOrEmpty(str))
                             lst[cnt++] = str;
                         break;
-                    case ENameOrder.Suffix:
+                    case ETokenType.Suffix:
                         str = suffix.GetString(suffix.Counter + idx);
                         if (!string.IsNullOrEmpty(str))
                             lst[cnt++] = str;
                         break;
-                    case ENameOrder.Variant:
+                    case ETokenType.Variant:
                         str = variant.GetString(variant.Counter + idx);
                         if (!string.IsNullOrEmpty(str))
                             lst[cnt++] = str;
@@ -190,7 +219,16 @@ namespace XiRenameTool
             return string.Join(separator, lst, 0, cnt);
         }
 
-        public static string GetString(NameItem item)
+        ///--------------------------------------------------------------------
+        /// <summary>Gets a string.</summary>
+        ///
+        /// <param name="item">    The item.</param>
+        /// <param name="category">(Optional) The category.</param>
+        ///
+        /// <returns>The string.</returns>
+        ///--------------------------------------------------------------------
+
+        public static string GetString(FileDescriptor item, int idx = 0, string category = null)
         {
             item.Remove(XiRename.prefix.Mode, 0);
             item.Remove(XiRename.variant.Mode, -2);
@@ -200,10 +238,26 @@ namespace XiRenameTool
                 newName = MakeName(item.Name, XiRename.TargetConvention);
             else
                 newName = item.Name;
-            return GetString(newName, 0);
+            return GetString(newName, idx);
         }
 
-        ///------------------------------------------------------------------------
+        ///--------------------------------------------------------------------
+        /// <summary>Validates the name described by filePath.</summary>
+        ///
+        /// <param name="desc">        Full pathname of the file.</param>
+        /// <param name="fileCategory">Category the file belongs to.</param>
+        ///
+        /// <returns>True if it succeeds, false if it fails.</returns>
+        ///--------------------------------------------------------------------
+
+        public static EFileResult ValidateName(FileDescriptor desc, string fileCategory)
+        {
+            desc.ValidationStatus = Settings.ValidateName(desc, fileCategory);
+            return desc.ValidationStatus;
+        }
+
+
+        ///--------------------------------------------------------------------
         /// <summary>Makes a name.</summary>
         ///
         /// <exception cref="Exception">    Thrown when an exception error
@@ -213,7 +267,7 @@ namespace XiRenameTool
         /// <param fileName="convention">The convention.</param>
         ///
         /// <returns>A string.</returns>
-        ///------------------------------------------------------------------------
+        ///--------------------------------------------------------------------
 
         public static string MakeName(string name, ENameConvention convention)
         {
@@ -235,176 +289,93 @@ namespace XiRenameTool
             throw new System.Exception("NotImplemented");
         }
 
-        ///------------------------------------------------------------------------
-        /// <summary>Makes a prefix.</summary>
-        ///
-        /// <exception cref="Exception">    Thrown when an exception error
-        ///                                 condition occurs.</exception>
-        ///
-        /// <param name="name">          The name.</param>
-        /// <param fileName="convention">The convention.</param>
-        ///
-        /// <returns>A string.</returns>
-        ///------------------------------------------------------------------------
 
-        public static string MakePrefix(string name, ENameConvention convention)
-        {
-            switch (convention)
-            {
-                case ENameConvention.PascalCase:
-                    return Utils.Camelize(name, true);
-                case ENameConvention.CamelCase:
-                    return Utils.Camelize(name, false);
-                case ENameConvention.LowercaseUnderscore:
-                    return Utils.Decamelize(name, '_');
-                case ENameConvention.LowercaseDash:
-                    return Utils.Decamelize(name, '-');
-                case ENameConvention.UppercaseUnderscore:
-                    return Utils.Decamelize(name, '_').ToUpper();
-                case ENameConvention.UppercaseDash:
-                    return Utils.Decamelize(name, '-').ToUpper();
-            }
-            throw new System.Exception("NotImplemented");
-        }
-
-        ///------------------------------------------------------------------------
-        /// <summary>Makes a suffix.</summary>
-        ///
-        /// <exception cref="Exception">    Thrown when an exception error
-        ///                                 condition occurs.</exception>
-        ///
-        /// <param name="name">          The name.</param>
-        /// <param fileName="convention">The convention.</param>
-        ///
-        /// <returns>A string.</returns>
-        ///------------------------------------------------------------------------
-
-        public static string MakeSuffix(string name, ENameConvention convention)
-        {
-            switch (convention)
-            {
-                case ENameConvention.PascalCase:
-                    return Utils.Camelize(name, true);
-                case ENameConvention.CamelCase:
-                    return Utils.Camelize(name, false);
-                case ENameConvention.LowercaseUnderscore:
-                    return Utils.Decamelize(name, '_');
-                case ENameConvention.LowercaseDash:
-                    return Utils.Decamelize(name, '-');
-                case ENameConvention.UppercaseUnderscore:
-                    return Utils.Decamelize(name, '_').ToUpper();
-                case ENameConvention.UppercaseDash:
-                    return Utils.Decamelize(name, '-').ToUpper();
-            }
-            throw new System.Exception("NotImplemented");
-        }
-
-        ///------------------------------------------------------------------------
-        /// <summary>Validates the name described by path.</summary>
-        ///
-        /// <param name="path">Full pathname of the file.</param>
-        ///
-        /// <returns>True if it succeeds, false if it fails.</returns>
-        ///------------------------------------------------------------------------
-
-        public bool ValidateName(string path)
-        {
-            foreach (var ignore in Settings.ignorePath)
-            {
-                if (path.Contains(ignore))
-                    return true;
-            }
-            var name = System.IO.Path.GetFileName(path);
-            var ext = System.IO.Path.GetExtension(path);
-
-            var prefixEnds = Utils.MinIndex(name.IndexOf('_'), name.IndexOf('-'));
-            var suffuxStarts = Utils.MinIndex(name.LastIndexOf('_'), name.LastIndexOf('-'));
-
-            foreach (var type in Settings.fileTypes)
-            {
-                if (type.VerifyExtention(ext))
-                {
-
-                }
-            }
-            return false;
-        }
-
-        ///------------------------------------------------------------------------
+        ///--------------------------------------------------------------------
         /// <summary>Gets options for controlling the file types.</summary>
         ///
-        /// <counter>Options that control the file types.</counter>
-        ///------------------------------------------------------------------------
+        /// <value>Options that control the file category.</value>
+        ///--------------------------------------------------------------------
 
-        public static string[] FileTypesOptions => Settings.fileTypes.Select(o => o.Name).ToArray();
+        public static string[] FileCategoryOptions => fileCategoryOptions ??= Settings.fileTypes.Select(o => o.Category).Distinct().ToArray();
+
+        /// <summary>Options for controlling the file category.</summary>
+        private static string[] fileCategoryOptions;
 
         /// <summary>Zero-based index of the file type.</summary>
-        private static int fileTypeIndex;
+        private static int fileCategoryIndex;
 
-        ///------------------------------------------------------------------------
+        public static string FileCategory => FileCategoryOptions[fileCategoryIndex];
+
+        ///--------------------------------------------------------------------
         /// <summary>Gets or sets the zero-based index of the file type.</summary>
         ///
-        /// <counter>The file type index.</counter>
-        ///------------------------------------------------------------------------
+        /// <value>The file category index.</value>
+        ///--------------------------------------------------------------------
 
-        public static int FileTypeIndex
+        public static int FileCategoryIndex
         {
-            get => fileTypeIndex;
+            get => fileCategoryIndex;
             set
             {
-                if (fileTypeIndex != value)
+                if (fileCategoryIndex != value)
                 {
-                    fileTypeIndex = value;
-                    OnChangeType();
+                    fileCategoryIndex = value;
+                    OnChangeCtegory();
                 }
                 else
-                    fileTypeIndex = value;
+                    fileCategoryIndex = value;
             }
         }
 
         /// <summary>Executes the 'change type' action.</summary>
-        static void OnChangeType()
+        static void OnChangeCtegory()
         {
             prefix.Options.Clear();
             suffix.Options.Clear();
-            var name = FileTypesOptions[fileTypeIndex];
-            Settings.FindOptionsByCategory(name, prefix.Options, suffix.Options);
+            Settings.FindOptionsByCategory(FileCategory, prefix.Options, suffix.Options);
             prefix.OnChangeType();
             suffix.OnChangeType();
         }
 
-        ///------------------------------------------------------------------------
+        ///--------------------------------------------------------------------
         /// <summary>Gets a separator.</summary>
         ///
         /// <param fileName="convention">The convention.</param>
         ///
         /// <returns>The separator.</returns>
-        ///------------------------------------------------------------------------
+        ///--------------------------------------------------------------------
 
         public static char GetSeparator(ENameConvention convention)
         {
             return separators[(int)convention];
         }
 
+        /// <summary>(Immutable) the separators.</summary>
         static readonly char[] separators = new[] { '_', '_', '_', '-', '_', '-' };
 
-        ///------------------------------------------------------------------------
+        ///--------------------------------------------------------------------
         /// <summary>Gets or sets the fileName convention.</summary>
         ///
-        /// <counter>The fileName convention.</counter>
-        ///------------------------------------------------------------------------
+        /// <value>The target convention.</value>
+        ///--------------------------------------------------------------------
 
         public static ENameConvention TargetConvention
         {
             get => targetConvention;
-            set { targetConvention = value; SavePreferences(); }
+            set { 
+                targetConvention = value;
+                prefix.TargetConvention = value;
+                suffix.TargetConvention = value;
+                variant.TargetConvention = value;
+                SavePreferences(); 
+            }
         }
 
-        ///------------------------------------------------------------------------
+        ///--------------------------------------------------------------------
         /// <summary>Gets or sets the rename Mode.</summary>
         ///
-        /// <counter>The rename Mode.</counter>
-        ///------------------------------------------------------------------------
+        /// <value>The rename mode.</value>
+        ///--------------------------------------------------------------------
 
         public static ERenameMode RenameMode
         {
@@ -412,6 +383,7 @@ namespace XiRenameTool
             set { renameMode = value; SavePreferences(); }
         }
 
+        /// <summary>(Immutable) the preference format.</summary>
         const string preferenceFormat = "XiRename_{0}";
 
         /// <summary>Saves the preferences.</summary>
@@ -421,7 +393,7 @@ namespace XiRenameTool
 #if UNITY_EDITOR
             EditorPrefs.SetInt(string.Format(preferenceFormat, nameof(targetConvention)), (int)targetConvention);
             EditorPrefs.SetInt(string.Format(preferenceFormat, nameof(renameMode)), (int)renameMode);
-            EditorPrefs.SetInt(string.Format(preferenceFormat, nameof(fileTypeIndex)), (int)fileTypeIndex);
+            EditorPrefs.SetInt(string.Format(preferenceFormat, nameof(fileCategoryIndex)), (int)fileCategoryIndex);
 #endif
         }
 
@@ -435,9 +407,9 @@ namespace XiRenameTool
             suffix.Precision = Settings.suffixPrecision;
             targetConvention = (ENameConvention)EditorPrefs.GetInt(string.Format(preferenceFormat, nameof(targetConvention)), (int)targetConvention);
             renameMode = (ERenameMode)EditorPrefs.GetInt(string.Format(preferenceFormat, nameof(renameMode)), (int)renameMode);
-            fileTypeIndex = EditorPrefs.GetInt(string.Format(preferenceFormat, nameof(fileTypeIndex)), (int)fileTypeIndex);
+            fileCategoryIndex = EditorPrefs.GetInt(string.Format(preferenceFormat, nameof(fileCategoryIndex)), (int)fileCategoryIndex);
 #endif
-            OnChangeType();
+            OnChangeCtegory();
         }
 
         /// <summary>Clears the preferences.</summary>
@@ -446,13 +418,21 @@ namespace XiRenameTool
 #if UNITY_EDITOR
             EditorPrefs.DeleteKey(string.Format(preferenceFormat, nameof(targetConvention)));
             EditorPrefs.DeleteKey(string.Format(preferenceFormat, nameof(renameMode)));
-            EditorPrefs.DeleteKey(string.Format(preferenceFormat, nameof(fileTypeIndex)));
+            EditorPrefs.DeleteKey(string.Format(preferenceFormat, nameof(fileCategoryIndex)));
 #endif
         }
     }
+
+    ///------------------------------------------------------------------------
+    /// <summary>A token is the part of the file name. Fore example
+    /// 'foo_bar_baz' has 3 tokens ["foo","bar","baz"]. The token generator
+    /// produces posible names for a token.</summary>
+    ///------------------------------------------------------------------------
+
     [System.Serializable]
-    public class Designator
+    public class TokenGenerator
     {
+        /// <summary>(Immutable) the formats.</summary>
         private static readonly string[] formats = new string[] { "", "0", "00", "000", "0000", "00000", "000000", "0000000", "00000000", "000000000" };
 
         /// <summary>The suffix Mode.</summary>
@@ -468,91 +448,177 @@ namespace XiRenameTool
         /// <summary>The suffix delta.</summary>
         private int delta = 1;
         /// <summary>True if has counter, false if not.</summary>
-        private bool hasValue;
+        private bool useCounter;
         /// <summary>True if has pop up, false if not.</summary>
-        public bool HasPopUp;
+        public bool WithPopUp;
+        /// <summary>True if has counter, false if not.</summary>
+        public bool WithCounter;
+        /// <summary>The preference format.</summary>
+        string preferenceFormat;
+        /// <summary>Target convention.</summary>
+        private ENameConvention targetConvention = ENameConvention.PascalCase;
 
-
-        public ERenameAdvancedMode Mode { get { return mode; } set { mode = value; XiRename.DoUpdateGUI = true; } }
-        public string Starts { get { return starts; } set { starts = value; XiRename.DoUpdateGUI = true; } }
-        public string Ends { get { return ends; } set { ends = value; XiRename.DoUpdateGUI = true; } }
-        public int Counter { get { return counter; } set { counter = value; XiRename.DoUpdateGUI = true; } }
-        public int Precision { get { return precision; } set { precision = value; XiRename.DoUpdateGUI = true; } }
-        public int Delta { get { return delta; } set { delta = value; XiRename.DoUpdateGUI = true; } }
-        public bool HasValue { get { return hasValue; } set { hasValue = value; XiRename.DoUpdateGUI = true; } }
-
-        ///------------------------------------------------------------------------
-        /// <summary>Constructor.</summary>
-        ///
-        /// <param name="hasPopUp">True if has pop up, false if not.</param>
-        ///------------------------------------------------------------------------
-
-        public Designator(bool hasPopUp)
+        private bool isModified;
+        private void OnModify()
         {
-            HasPopUp = hasPopUp;
+            XiRename.DoUpdateGUI = true;
+            SavePreferences();
         }
 
-        ///------------------------------------------------------------------------
+        ///--------------------------------------------------------------------
+        /// <summary>Gets or sets target convention.</summary>
+        ///
+        /// <value>The target convention.</value>
+        ///--------------------------------------------------------------------
+        public ENameConvention TargetConvention 
+        { 
+            get { return targetConvention; } 
+            set { var isModified = targetConvention != value; targetConvention = value; if  (isModified) OnModify(); } 
+        }
+
+        ///--------------------------------------------------------------------
+        /// <summary>Gets or sets the mode.</summary>
+        ///
+        /// <value>The mode.</value>
+        ///--------------------------------------------------------------------
+
+        public ERenameAdvancedMode Mode { 
+            get { return mode; } 
+            set { var isModified = mode != value; mode = value; if  (isModified) OnModify(); } 
+        }
+
+        ///--------------------------------------------------------------------
+        /// <summary>Gets or sets the starts.</summary>
+        ///
+        /// <value>The starts.</value>
+        ///--------------------------------------------------------------------
+
+        public string Starts { 
+            get { return starts; } 
+            set { var isModified = starts != value; starts = value; if  (isModified) OnModify(); } 
+        }
+
+        ///--------------------------------------------------------------------
+        /// <summary>Gets or sets the ends.</summary>
+        ///
+        /// <value>The ends.</value>
+        ///--------------------------------------------------------------------
+
+        public string Ends {
+            get { return ends; }
+            set { var isModified = ends != value; ends = value; if  (isModified) OnModify(); } 
+        }
+
+        ///--------------------------------------------------------------------
+        /// <summary>Gets or sets the counter.</summary>
+        ///
+        /// <value>The counter.</value>
+        ///--------------------------------------------------------------------
+
+        public int Counter { 
+            get { return counter; } 
+            set { var isModified = counter != value; counter = System.Math.Abs(value); if  (isModified) OnModify(); } 
+        }
+
+        ///--------------------------------------------------------------------
+        /// <summary>Gets or sets the precision.</summary>
+        ///
+        /// <value>The precision.</value>
+        ///--------------------------------------------------------------------
+
+        public int Precision { 
+            get { return precision; } 
+            set { var isModified = precision != value; precision = System.Math.Abs(value); if  (isModified) OnModify(); } 
+        }
+
+        ///--------------------------------------------------------------------
+        /// <summary>Gets or sets the delta.</summary>
+        ///
+        /// <value>The delta.</value>
+        ///--------------------------------------------------------------------
+
+        public int Delta { 
+            get { return delta; } 
+            set { var isModified = delta != value; delta = value; if  (isModified) OnModify(); } 
+        }
+
+        ///--------------------------------------------------------------------
+        /// <summary>Gets or sets a value indicating whether this object use
+        /// counter.</summary>
+        ///
+        /// <value>True if use counter, false if not.</value>
+        ///--------------------------------------------------------------------
+
+        public bool UseCounter { 
+            get { return useCounter; } 
+            set { var isModified = useCounter != value; useCounter = value; if  (isModified) OnModify(); } 
+        }
+
+        ///--------------------------------------------------------------------
+        /// <summary>Constructor.</summary>
+        ///
+        /// <param name="name">      The name.</param>
+        /// <param name="hasPopUp">     True if has pop up, false if not.</param>
+        /// <param name="hasCounter">   True if has counter, false if not.</param>
+        ///--------------------------------------------------------------------
+
+        public TokenGenerator(ETokenType type)
+        {
+            preferenceFormat = $"XiRename_{type.ToString()}_{{0}}";
+            WithCounter = type == ETokenType.Variant || type == ETokenType.Prefix;
+            WithPopUp = type == ETokenType.Prefix || type == ETokenType.Suffix; 
+            LoadPreferences();
+        }
+
+        ///--------------------------------------------------------------------
         /// <summary>Gets the format to use.</summary>
         ///
-        /// <counter>The format.</counter>
-        ///------------------------------------------------------------------------
+        /// <value>The format.</value>
+        ///--------------------------------------------------------------------
 
         public string Format => formats[precision];
 
-        ///------------------------------------------------------------------------
+        ///--------------------------------------------------------------------
         /// <summary>Gets the full string.</summary>
         ///
         /// <returns>The full string.</returns>
-        ///------------------------------------------------------------------------
+        ///--------------------------------------------------------------------
 
         public string GetString()
         {
             if (Mode == ERenameAdvancedMode.Keep)
                 return string.Empty;
 
-            if (hasValue)
-                return Starts + (precision == 0 ? string.Empty : counter.ToString(Format)) + ends;
+            if (useCounter)
+                return Starts + (precision == 0 ? string.Empty : System.Math.Max(0,counter).ToString(Format)) + ends;
             return Starts;
         }
 
-        ///------------------------------------------------------------------------
-        /// <summary>Gets string and increment.</summary>
-        ///
-        /// <returns>The string and increment.</returns>
-        ///------------------------------------------------------------------------
-
-        public string GetStringAndIncrement()
-        {
-            if (Mode == ERenameAdvancedMode.Keep)
-                return string.Empty;
-            var str = GetString();
-            counter += delta;
-            return str;
-        }
-
-        ///------------------------------------------------------------------------
+        ///--------------------------------------------------------------------
         /// <summary>Gets the full string.</summary>
         ///
         /// <param name="idx">Zero-based index of the.</param>
         ///
         /// <returns>The string.</returns>
-        ///------------------------------------------------------------------------
+        ///--------------------------------------------------------------------
 
         public string GetString(int idx)
         {
             if (Mode == ERenameAdvancedMode.Keep)
                 return string.Empty;
-            if (hasValue)
-                return Starts + (precision == 0 ? string.Empty : idx.ToString(Format)) + ends;
+            if (useCounter)
+            {
+                var cnt = System.Math.Max(0, Delta * idx + counter);
+                return Starts + (precision == 0 ? string.Empty : cnt.ToString(Format)) + ends;
+            }
             return Starts;
         }
 
-        ///------------------------------------------------------------------------
+        ///--------------------------------------------------------------------
         /// <summary>Gets or sets the counter string.</summary>
         ///
-        /// <counter>The counter string.</counter>
-        ///------------------------------------------------------------------------
+        /// <value>The value string.</value>
+        ///--------------------------------------------------------------------
 
         public string ValueString
         {
@@ -568,11 +634,11 @@ namespace XiRenameTool
             }
         }
 
-        ///------------------------------------------------------------------------
+        ///--------------------------------------------------------------------
         /// <summary>Gets or sets the delta string.</summary>
         ///
-        /// <counter>The delta string.</counter>
-        ///------------------------------------------------------------------------
+        /// <value>The delta string.</value>
+        ///--------------------------------------------------------------------
 
         public string DeltaString
         {
@@ -586,11 +652,11 @@ namespace XiRenameTool
         /// <summary>Zero-based index of the prefix.</summary>
         private int prefixIndex;
 
-        ///------------------------------------------------------------------------
+        ///--------------------------------------------------------------------
         /// <summary>Gets or sets the zero-based index of the prefix.</summary>
         ///
-        /// <counter>The prefix index.</counter>
-        ///------------------------------------------------------------------------
+        /// <value>The prefix index.</value>
+        ///--------------------------------------------------------------------
 
         public int PrefixIndex
         {
@@ -599,18 +665,18 @@ namespace XiRenameTool
             {
                 if (value != prefixIndex)
                 {
-                    Starts = Options[value].Value;
+                    Starts = Utils.MakePrefix(Options[value].Value, targetConvention);
                     XiRename.DoUpdateGUI = true;
                 }
                 prefixIndex = value;
             }
         }
 
-        ///------------------------------------------------------------------------
+        ///--------------------------------------------------------------------
         /// <summary>Gets options for controlling the prefix.</summary>
         ///
-        /// <counter>Options that control the prefix.</counter>
-        ///------------------------------------------------------------------------
+        /// <value>Options that control the prefix.</value>
+        ///--------------------------------------------------------------------
 
         public string[] PrefixOptions => Options.Select(o => $"{o.Name} ({o.Value})").ToArray();
 
@@ -618,30 +684,140 @@ namespace XiRenameTool
         public void OnChangeType()
         {
             prefixIndex = 0;
+            SavePreferences();
         }
+
+
+        /// <summary>Saves the preferences.</summary>
+        private void SavePreferences()
+        {
+#if UNITY_EDITOR
+            EditorPrefs.SetInt(string.Format(preferenceFormat, nameof(mode)), (int)mode);
+            EditorPrefs.SetString(string.Format(preferenceFormat, nameof(starts)), starts);
+            EditorPrefs.SetString(string.Format(preferenceFormat, nameof(ends)), ends);
+            EditorPrefs.SetInt(string.Format(preferenceFormat, nameof(counter)), counter);
+            EditorPrefs.SetInt(string.Format(preferenceFormat, nameof(delta)), delta);
+            EditorPrefs.SetBool(string.Format(preferenceFormat, nameof(useCounter)), useCounter);
+#endif
+        }
+
+        /// <summary>Loads the preferences.</summary>
+        private void LoadPreferences()
+        {
+#if UNITY_EDITOR
+            mode = (ERenameAdvancedMode)EditorPrefs.GetInt(string.Format(preferenceFormat, nameof(mode)), (int)mode);
+            starts = EditorPrefs.GetString(string.Format(preferenceFormat, nameof(starts)), starts);
+            ends = EditorPrefs.GetString(string.Format(preferenceFormat, nameof(ends)), ends);
+            counter = EditorPrefs.GetInt(string.Format(preferenceFormat, nameof(counter)), counter);
+            delta = EditorPrefs.GetInt(string.Format(preferenceFormat, nameof(delta)), delta);
+            useCounter = EditorPrefs.GetBool(string.Format(preferenceFormat, nameof(useCounter)), useCounter);
+#endif
+            OnChangeType();
+        }
+
+        /// <summary>Clears the preferences.</summary>
+        private void ClearPreferences()
+        {
+#if UNITY_EDITOR
+            EditorPrefs.DeleteKey(string.Format(preferenceFormat, nameof(mode)));
+            EditorPrefs.DeleteKey(string.Format(preferenceFormat, nameof(starts)));
+            EditorPrefs.DeleteKey(string.Format(preferenceFormat, nameof(ends)));
+            EditorPrefs.DeleteKey(string.Format(preferenceFormat, nameof(counter)));
+            EditorPrefs.DeleteKey(string.Format(preferenceFormat, nameof(delta)));
+            EditorPrefs.DeleteKey(string.Format(preferenceFormat, nameof(useCounter)));
+#endif
+        }
+
     }
 
+    ///------------------------------------------------------------------------
+    /// <summary>A file descriptor is a caching structure for storing the file
+    /// name path and tokens.</summary>
+    ///------------------------------------------------------------------------
 
-    public class NameItem
+    public class FileDescriptor
     {
-        public string FullPath;
-        public string FilePath;
-        public string FileExt;
-        public string FileName;
-
-
+        public UnityEngine.Object Reference;
+        /// <summary>The validation status.</summary>
+        public EFileResult ValidationStatus;
+        /// <summary>True if is directory, false if not.</summary>
+        public bool IsDirectory;
+        /// <summary>True if is temporary, false if not.</summary>
         public bool IsTemp;
-        public List<string> Tokens;
-        public NameItem(string path)
-        {
-            FullPath = path;
+        /// <summary>Name of the file path and the name.</summary>
+        public string OriginalPath;
+        /// <summary>Full pathname of the file.</summary>
+        public string DirectoryPath;
+        /// <summary>Extent of the file.</summary>
+        public string FileExt;
+        /// <summary>Filename of the file.</summary>
+        public string FileName;
+        /// <summary>Filename of the file.</summary>
+        public string ResultName;
 
-            FilePath = System.IO.Path.GetFullPath(path);
-            FileName = System.IO.Path.GetFileNameWithoutExtension(path);
-            FileExt = System.IO.Path.GetExtension(path);
+        /// <summary>The tokens.</summary>
+        public List<string> Tokens;
+
+        ///--------------------------------------------------------------------
+        /// <summary>Gets a value indicating whether this object is valid.</summary>
+        ///
+        /// <value>True if this object is valid, false if not.</value>
+        ///--------------------------------------------------------------------
+
+        public bool IsValid => Tokens.Count > 0;
+
+        ///--------------------------------------------------------------------
+        /// <summary>Gets a value indicating whether this object is
+        /// invalid.</summary>
+        ///
+        /// <value>True if this object is invalid, false if not.</value>
+        ///--------------------------------------------------------------------
+
+        public bool IsInvalid => Tokens.Count == 0;
+
+        ///--------------------------------------------------------------------
+        /// <summary>Gets a value indicating whether this object is file.</summary>
+        ///
+        /// <value>True if this object is file, false if not.</value>
+        ///--------------------------------------------------------------------
+
+        public bool IsFile => !IsDirectory;
+
+        ///--------------------------------------------------------------------
+        /// <summary>Gets the result name with extention.</summary>
+        ///
+        /// <value>The result name with extention.</value>
+        ///--------------------------------------------------------------------
+
+        public string ResultNameWithExtention => $"{ResultName}{FileExt}";
+
+        ///--------------------------------------------------------------------
+        /// <summary>Constructor.</summary>
+        ///
+        /// <param name="path">Full pathname of the file.</param>
+        ///--------------------------------------------------------------------
+
+        public FileDescriptor(UnityEngine.Object obj)
+        {
+            Reference = obj;
+            OriginalPath =AssetDatabase.GetAssetPath(obj); 
+            DirectoryPath = System.IO.Path.GetDirectoryName(OriginalPath).Replace("\\", "/");
+            FileName = System.IO.Path.GetFileNameWithoutExtension(OriginalPath);
+            FileExt = System.IO.Path.GetExtension(OriginalPath);
             Tokens = FileName.Replace("-", "_").Split("_").ToList();
             IsTemp = (FileName.StartsWith("__"));
+
+            var attr = System.IO.File.GetAttributes(OriginalPath);
+            IsDirectory = attr.HasFlag(System.IO.FileAttributes.Directory);
         }
+
+        ///--------------------------------------------------------------------
+        /// <summary>Removes at described by idx.</summary>
+        ///
+        /// <param name="idx">Zero-based index of the.</param>
+        ///
+        /// <returns>True if it succeeds, false if it fails.</returns>
+        ///--------------------------------------------------------------------
 
         public bool RemoveAt(int idx)
         {
@@ -657,7 +833,23 @@ namespace XiRenameTool
             return true;
         }
 
+        ///--------------------------------------------------------------------
+        /// <summary>Gets the name.</summary>
+        ///
+        /// <value>The name.</value>
+        ///--------------------------------------------------------------------
+
         public string Name => string.Join("_", Tokens);
+
+        ///--------------------------------------------------------------------
+        /// <summary>Removes this object.</summary>
+        ///
+        /// <param name="mode">The mode.</param>
+        /// <param name="idx"> Zero-based index of the.</param>
+        ///
+        /// <returns>True if it succeeds, false if it fails.</returns>
+        ///--------------------------------------------------------------------
+
         public bool Remove(ERenameAdvancedMode mode, int idx)
         {
             if (mode != ERenameAdvancedMode.Keep && mode != ERenameAdvancedMode.Keep)
@@ -666,8 +858,18 @@ namespace XiRenameTool
         }
     }
 
+    /// <summary>An utilities.</summary>
     public static class Utils
     {
+        ///--------------------------------------------------------------------
+        /// <summary>Minimum index.</summary>
+        ///
+        /// <param name="index1">The first index.</param>
+        /// <param name="index2">The second index.</param>
+        ///
+        /// <returns>An int.</returns>
+        ///--------------------------------------------------------------------
+
         public static int MinIndex(int index1, int index2)
         {
             if (index1 < 0)
@@ -676,6 +878,15 @@ namespace XiRenameTool
                 return index1;
             return index1 < index2 ? index1 : index2;
         }
+
+        ///--------------------------------------------------------------------
+        /// <summary>Maximum index.</summary>
+        ///
+        /// <param name="index1">The first index.</param>
+        /// <param name="index2">The second index.</param>
+        ///
+        /// <returns>An int.</returns>
+        ///--------------------------------------------------------------------
 
         public static int MaxIndex(int index1, int index2)
         {
@@ -686,15 +897,18 @@ namespace XiRenameTool
             return index1 > index2 ? index1 : index2;
         }
 
-        /// <summary>
-        /// Remove ' ', '-' or '_' to change forms:
-        ///   "foo-bar"  ->  "FooBar"
-        ///   "foo_bar"  ->  "FooBar"
-        ///   "foo bar"  ->  "FooBar"
-        /// </summary>
-        /// <param name="str"></param>
-        /// <param name="capitalize">Should be capitalized first character or not</param>
-        /// <returns></returns>
+        ///--------------------------------------------------------------------
+        /// <summary>Remove ' ', '-' or '_' to change forms:
+        ///   "foo-bar"  ->  "FooBar" "foo_bar"  ->  "FooBar" "foo bar"  ->
+        ///   "FooBar".</summary>
+        ///
+        /// <param name="str">       .</param>
+        /// <param name="capitalize">   (Optional) Should be capitalized
+        ///                             first character or not.</param>
+        ///
+        /// <returns>A string.</returns>
+        ///--------------------------------------------------------------------
+
         public static string Camelize(string str, bool capitalize = true)
         {
             Debug.Assert(str != null);
@@ -722,11 +936,15 @@ namespace XiRenameTool
             return output;
         }
 
-        /// <summary>
-        /// Convert 'FooBar' to 'foo-bar'
-        /// </summary>
-        /// <param name="str"></param>
-        /// <returns></returns>
+        ///--------------------------------------------------------------------
+        /// <summary>Convert 'FooBar' to 'foo-bar'.</summary>
+        ///
+        /// <param name="str">      .</param>
+        /// <param name="separator">(Optional) The separator.</param>
+        ///
+        /// <returns>A string.</returns>
+        ///--------------------------------------------------------------------
+
         public static string Decamelize(string str, char separator = '-')
         {
             Debug.Assert(str != null);
@@ -760,5 +978,70 @@ namespace XiRenameTool
             }
             return output;
         }
+
+        ///--------------------------------------------------------------------
+        /// <summary>Makes a prefix.</summary>
+        ///
+        /// <exception cref="Exception">    Thrown when an exception error
+        ///                                 condition occurs.</exception>
+        ///
+        /// <param name="name">          The name.</param>
+        /// <param fileName="convention">The convention.</param>
+        ///
+        /// <returns>A string.</returns>
+        ///--------------------------------------------------------------------
+
+        public static string MakePrefix(string name, ENameConvention convention)
+        {
+            switch (convention)
+            {
+                case ENameConvention.PascalCase:
+                    return Utils.Camelize(name, true);
+                case ENameConvention.CamelCase:
+                    return Utils.Camelize(name, false);
+                case ENameConvention.LowercaseUnderscore:
+                    return Utils.Decamelize(name, '_');
+                case ENameConvention.LowercaseDash:
+                    return Utils.Decamelize(name, '-');
+                case ENameConvention.UppercaseUnderscore:
+                    return Utils.Decamelize(name, '_').ToUpper();
+                case ENameConvention.UppercaseDash:
+                    return Utils.Decamelize(name, '-').ToUpper();
+            }
+            throw new System.Exception("NotImplemented");
+        }
+
+        ///--------------------------------------------------------------------
+        /// <summary>Makes a suffix.</summary>
+        ///
+        /// <exception cref="Exception">    Thrown when an exception error
+        ///                                 condition occurs.</exception>
+        ///
+        /// <param name="name">          The name.</param>
+        /// <param fileName="convention">The convention.</param>
+        ///
+        /// <returns>A string.</returns>
+        ///--------------------------------------------------------------------
+
+        public static string MakeSuffix(string name, ENameConvention convention)
+        {
+            switch (convention)
+            {
+                case ENameConvention.PascalCase:
+                    return Utils.Camelize(name, true);
+                case ENameConvention.CamelCase:
+                    return Utils.Camelize(name, false);
+                case ENameConvention.LowercaseUnderscore:
+                    return Utils.Decamelize(name, '_');
+                case ENameConvention.LowercaseDash:
+                    return Utils.Decamelize(name, '-');
+                case ENameConvention.UppercaseUnderscore:
+                    return Utils.Decamelize(name, '_').ToUpper();
+                case ENameConvention.UppercaseDash:
+                    return Utils.Decamelize(name, '-').ToUpper();
+            }
+            throw new System.Exception("NotImplemented");
+        }
+
     }
 }
