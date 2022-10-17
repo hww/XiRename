@@ -163,8 +163,8 @@ namespace XiRenameTool
             kind.DefinePreffix("Rig", "RIG");
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
             kind = Define("Models/MAX", "Models", ".max");
-            kind.DefineSuffix("Mesh", "_mesh_lod0*");
-            kind.DefineSuffix("Mesh Collider", "collider");
+            kind.DefineSuffix("MAX Mesh LOD", "_mesh_lod0*");
+            kind.DefineSuffix("MAX Mesh Collider", "collider");
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
             kind = Define("Animations", null, ".fbx, .ma, .mb");
             kind.DefinePreffix("Animation Clip", "A");
@@ -189,22 +189,31 @@ namespace XiRenameTool
             kind = Define("Prefabs", "Prefabs", ".prefab");
             kind.DefinePreffix("Prefab", "P");
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-            kind = Define("Textures", null, ".tga, .bmp, .jpg, .png, .gif, .psd");
+            kind = Define("Textures", "Textures", ".tga, .bmp, .jpg, .png, .gif, .psd");
             kind.DefinePreffix("Texture", "T");
             kind.DefinePreffix("Texture Cube", "TC");
             kind.DefinePreffix("Media Texture", "MT");
             kind.DefinePreffix("Render Target", "RT");
             kind.DefinePreffix("Cube Render Target", "RTC");
-            kind.DefinePreffix("Texture Light Profile", "TLP");
-            kind.DefineSuffix("Texture (Diffuse/Albedo/Base Color", "D");
-            kind.DefineSuffix("Texture (Normal)", "N");
-            kind.DefineSuffix("Texture (Roughness)", "R");
-            kind.DefineSuffix("Texture (Alpha/Opacity)", "A");
-            kind.DefineSuffix("Texture (Ambient Occlusion)", "AO");
-            kind.DefineSuffix("Texture (Bump)", "B");
-            kind.DefineSuffix("Texture (Mask)", "E");
-            kind.DefineSuffix("Texture (Mask)", "M");
-            kind.DefineSuffix("Texture (Specular)", "S");
+            kind.DefinePreffix("Light Profile", "TLP");
+            
+            kind.DefineSuffix("Albedo", "RGB");
+            kind.DefineSuffix("Albedo+Opacity", "RGBA");
+            kind.DefineSuffix("Opacity", "A");
+            kind.DefineSuffix("Roughness)", "R");
+            kind.DefineSuffix("Metallic)", "MT");
+            kind.DefineSuffix("Metallic+Roughness)", "MTR");
+            kind.DefineSuffix("Specular", "SP");
+            kind.DefineSuffix("Metallic)", "SPR");
+            kind.DefineSuffix("Emmition", "EM");
+            kind.DefineSuffix("Normal", "N");
+            kind.DefineSuffix("Displacement", "DP");
+            kind.DefineSuffix("Ambient Occlusion", "AO");
+            kind.DefineSuffix("Height Map", "H");
+            kind.DefineSuffix("Flow Map", "FM");
+            kind.DefineSuffix("Light Map", "L");
+            kind.DefineSuffix("Bump", "B");
+            kind.DefineSuffix("Mask", "M");
             // It is generally acceptable to include an Alpha/ Opacity layer 
             // in your Diffuse/ Albedo's alpha channel and as this is common 
             // practice, adding A to the _D category is optional.

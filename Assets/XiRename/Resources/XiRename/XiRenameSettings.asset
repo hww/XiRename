@@ -16,7 +16,9 @@ MonoBehaviour:
   nameConvention: 0
   prefixPrecision: 2
   suffixPrecision: 2
-  ignorePath: []
+  ignorePath:
+  - Art/External
+  - Design/External
   fileTypes:
   - Name: Models/FBX
     Category: Models

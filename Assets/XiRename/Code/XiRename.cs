@@ -435,6 +435,8 @@ namespace XiRenameTool
         /// <summary>(Immutable) the formats.</summary>
         private static readonly string[] formats = new string[] { "", "0", "00", "000", "0000", "00000", "000000", "0000000", "00000000", "000000000" };
 
+        /// <summary>The type.</summary>
+        private ETokenType type;
         /// <summary>The suffix Mode.</summary>
         private ERenameAdvancedMode mode;
         /// <summary>The name prefix.</summary>
@@ -449,10 +451,6 @@ namespace XiRenameTool
         private int delta = 1;
         /// <summary>True if has counter, false if not.</summary>
         private bool useCounter;
-        /// <summary>True if has pop up, false if not.</summary>
-        public bool WithPopUp;
-        /// <summary>True if has counter, false if not.</summary>
-        public bool WithCounter;
         /// <summary>The preference format.</summary>
         string preferenceFormat;
         /// <summary>Target convention.</summary>
@@ -464,6 +462,13 @@ namespace XiRenameTool
             XiRename.DoUpdateGUI = true;
             SavePreferences();
         }
+
+
+        /// <summary>True if has counter, false if not.</summary>
+        public bool WithCounter => type == ETokenType.Variant || type == ETokenType.Prefix;
+
+        /// <summary>True if has pop up, false if not.</summary>
+        public bool WithPopUp => (type == ETokenType.Prefix || type == ETokenType.Suffix) && Options.Count>0; 
 
         ///--------------------------------------------------------------------
         /// <summary>Gets or sets target convention.</summary>
@@ -564,9 +569,9 @@ namespace XiRenameTool
 
         public TokenGenerator(ETokenType type)
         {
+            this.type = type;
             preferenceFormat = $"XiRename_{type.ToString()}_{{0}}";
-            WithCounter = type == ETokenType.Variant || type == ETokenType.Prefix;
-            WithPopUp = type == ETokenType.Prefix || type == ETokenType.Suffix; 
+   
             LoadPreferences();
         }
 
@@ -757,7 +762,9 @@ namespace XiRenameTool
 
         /// <summary>The tokens.</summary>
         public List<string> Tokens;
-
+        /// <summary>Zero-based index of the.</summary>
+        public int Index = 0;
+ 
         ///--------------------------------------------------------------------
         /// <summary>Gets a value indicating whether this object is valid.</summary>
         ///
@@ -774,6 +781,15 @@ namespace XiRenameTool
         ///--------------------------------------------------------------------
 
         public bool IsInvalid => Tokens.Count == 0;
+
+        ///--------------------------------------------------------------------
+        /// <summary>Gets a value indicating whether this object is
+        /// renamable.</summary>
+        ///
+        /// <value>True if this object is renamable, false if not.</value>
+        ///--------------------------------------------------------------------
+
+        public bool IsRenamable => ValidationStatus != EFileResult.Ignore && ValidationStatus != EFileResult.Undefined;
 
         ///--------------------------------------------------------------------
         /// <summary>Gets a value indicating whether this object is file.</summary>
@@ -804,7 +820,8 @@ namespace XiRenameTool
             DirectoryPath = System.IO.Path.GetDirectoryName(OriginalPath).Replace("\\", "/");
             FileName = System.IO.Path.GetFileNameWithoutExtension(OriginalPath);
             FileExt = System.IO.Path.GetExtension(OriginalPath);
-            Tokens = FileName.Replace("-", "_").Split("_").ToList();
+            // TODO Make Regexp
+            Tokens = FileName.Replace("  ", "_").Replace(" ", "_").Replace("-", "_").Split("_").ToList();
             IsTemp = (FileName.StartsWith("__"));
 
             var attr = System.IO.File.GetAttributes(OriginalPath);
@@ -852,7 +869,7 @@ namespace XiRenameTool
 
         public bool Remove(ERenameAdvancedMode mode, int idx)
         {
-            if (mode != ERenameAdvancedMode.Keep && mode != ERenameAdvancedMode.Keep)
+            if (mode != ERenameAdvancedMode.Keep && mode != ERenameAdvancedMode.Add)
                 return RemoveAt(idx);
             return true;
         }
