@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/hww/XiRename/compare/v1.0.1...v1.0.2) (2022-10-17)
+
+
+### Bug Fixes
+
+* **code:** Add files ([d5e7bb9](https://github.com/hww/XiRename/commit/d5e7bb993bcb79c274d0f9bf8689adda1f24741a))
+
 ## [1.0.1](https://github.com/hww/XiRename/compare/v1.0.0...v1.0.1) (2022-10-17)
 
 
