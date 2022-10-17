@@ -18,7 +18,7 @@ Allows you to renumber a series of files by sorting the list of names.
 
 The tool works according to the Studio naming convention, which you can set up through the configuration panel.
 
-![Tool Image](Docs/tool-screenshot.png)
+![Tool Image](Docs/notes-image.png)
 
 The rules can be configured in the panel (below) or from the C# source code.
 
