@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/hww/XiRename/compare/v1.0.0...v1.0.1) (2022-10-17)
+
+
+### Bug Fixes
+
+* **code:** Second release ([be1b09f](https://github.com/hww/XiRename/commit/be1b09fe464f51689a68ffc4c78b2e170b4f4719))
+
 # 1.0.0 (2022-10-16)
 
 
