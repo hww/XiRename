@@ -1,4 +1,4 @@
-# XiRename _The game data tool for Unity 3D_
+# XiRename _The renaming tool for Unity 3D_
 
 ![](https://img.shields.io/badge/unity-2018.3%20or%20later-green.svg)
 [![⚙ Build and Release](https://github.com/hww/XiRename/actions/workflows/ci.yml/badge.svg)](https://github.com/hww/XiRename/actions/workflows/ci.yml)
@@ -6,12 +6,16 @@
 [![](https://img.shields.io/github/license/hww/XiRename.svg)](https://github.com/hww/XiRename/blob/master/LICENSE)
 [![semantic-release: angular](https://img.shields.io/badge/semantic--release-angular-e10079?logo=semantic-release)](https://github.com/semantic-release/semantic-release)
 
-![Title Image](Documentation/title_image.png)
+![Title Image](Docs/tool-screenshot.png)
 
-Simple Unity editor extension for managing visibility of layers and categories of objects, created by [hww](https://github.com/hww)
+Simple asstes renaming tool by [hww](https://github.com/hww)
 
 ## Introduction
 
+
+![Tool Image](Docs/tool-screenshot.png)
+
+![Settings Image](Docs/settings-screenshot.png)
 
 ## Install
 
