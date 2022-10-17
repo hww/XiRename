@@ -1,4 +1,4 @@
-# XiRename _The game data tool for Unity 3D_
+# XiRename _The renaming tool for Unity 3D_
 
 ![](https://img.shields.io/badge/unity-2018.3%20or%20later-green.svg)
 [![⚙ Build and Release](https://github.com/hww/XiRename/actions/workflows/ci.yml/badge.svg)](https://github.com/hww/XiRename/actions/workflows/ci.yml)
@@ -6,31 +6,43 @@
 [![](https://img.shields.io/github/license/hww/XiRename.svg)](https://github.com/hww/XiRename/blob/master/LICENSE)
 [![semantic-release: angular](https://img.shields.io/badge/semantic--release-angular-e10079?logo=semantic-release)](https://github.com/semantic-release/semantic-release)
 
-![Title Image](Documentation/title_image.png)
+![Title Image](Docs/title.png)
 
-Simple Unity editor extension for managing visibility of layers and categories of objects, created by [hww](https://github.com/hww)
+Simple asstes renaming tool by [hww](https://github.com/hww)
 
 ## Introduction
 
+The tool allows you to select and rename a group of files according to a pattern that can consist of: file name, prefix, suffix, and version or variant number.
+
+Allows you to renumber a series of files by sorting the list of names.
+
+The tool works according to the Studio naming convention, which you can set up through the configuration panel.
+
+![Tool Image](Docs/tool-screenshot.png)
+
+The rules can be configured in the panel (below) or from the C# source code.
+
+![Settings Image](Docs/settings-screenshot.png)
 
 ## Install
 
 The package is available on the openupm registry. You can install it via openupm-cli.
 
 ```bash
-openupm add com.hww.xigametool
+openupm add com.hww.xirename
 ```
 You can also install via git url by adding this entry in your manifest.json
 
 ```bash
-"com.hww.xigametool": "https://github.com/hww/XiGameTool.git#upm"
+"com.hww.xirename": "https://github.com/hww/XiRename.git#upm"
 ```
 ## TODO
 
+The current state of the project _Alpha_
+
 - [x] Basic functionality
 - [x] Configurabe and safe (no enum) the objects tagging
-- [x] Update documentation
-- [ ] The performance optimization
-- [ ] Better redraw screen for Unity
+- [ ] Update documentation
+- [ ] Per project verification tool
 
 
