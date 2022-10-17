@@ -1,3 +1,10 @@
+## [1.0.3](https://github.com/hww/XiRename/compare/v1.0.2...v1.0.3) (2022-10-17)
+
+
+### Bug Fixes
+
+* **code:** Textures added ([0962fbb](https://github.com/hww/XiRename/commit/0962fbb8ef35a64e80736aaa6f259aa35480202d))
+
 ## [1.0.2](https://github.com/hww/XiRename/compare/v1.0.1...v1.0.2) (2022-10-17)
 
 
