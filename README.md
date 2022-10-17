@@ -38,6 +38,8 @@ You can also install via git url by adding this entry in your manifest.json
 ```
 ## TODO
 
+The current state of the project _Alpha_
+
 - [x] Basic functionality
 - [x] Configurabe and safe (no enum) the objects tagging
 - [ ] Update documentation
