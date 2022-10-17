@@ -29,13 +29,13 @@ namespace XiRenameTool
     /// <summary>Values that represent file results.</summary>
     public enum EFileResult
     {
-        /// <summary>An enum constant representing the undefined option.</summary>
+        /// <summary>An enum constant representing the undefined type option.</summary>
         Undefined,
-        /// <summary>An enum constant representing the ignore option.</summary>
+        /// <summary>An enum constant representing the ignore file option.</summary>
         Ignore,
-        /// <summary>An enum constant representing the invalid option.</summary>
+        /// <summary>An enum constant representing the invalid file name option.</summary>
         Invalid,
-        /// <summary>An enum constant representing the valid option.</summary>
+        /// <summary>An enum constant representing the valid file name option.</summary>
         Valid
     }
 
