@@ -38,7 +38,7 @@ You can also install via git url by adding this entry in your manifest.json
 ```
 ## TODO
 
-The current state of the project _Alpha_
+The current state of the project _Alpha_. The tool has not been tested at the moment and needs to be tested and improved: the API, interface and default NamingConvention settings.
 
 - [x] Basic functionality
 - [x] Configurabe and safe (no enum) the objects tagging
