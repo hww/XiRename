@@ -46,7 +46,7 @@ The current state of the project _Alpha_. The tool has not been tested at the mo
 - [ ] Per project verification tool
 
 
-## Defaults with API
+## Define the Naming Convention with API
 
 The file name consists of tokens (name, prefix, suffix, version or variant). The order of the tokens must be determined.
 
