@@ -33,9 +33,9 @@ namespace XiRenameTool
         Undefined,
         /// <summary>An enum constant representing the ignore file option.</summary>
         Ignore,
-        /// <summary>An enum constant representing the invalid file name option.</summary>
+        /// <summary>An enum constant representing the invalid file cleanName option.</summary>
         Invalid,
-        /// <summary>An enum constant representing the valid file name option.</summary>
+        /// <summary>An enum constant representing the valid file cleanName option.</summary>
         Valid
     }
 
@@ -140,6 +140,8 @@ namespace XiRenameTool
         private static ENameConvention targetConvention = ENameConvention.PascalCase;
         /// <summary>The rename Mode.</summary>
         public static ERenameMode renameMode;
+        /// <summary>The rename to.</summary>
+        public static string renameTo;
 
         /// <summary>The prefix.</summary>
         public static TokenGenerator prefix = new TokenGenerator(ETokenType.Prefix);
@@ -151,11 +153,17 @@ namespace XiRenameTool
         /// <summary>True to do update graphical user interface.</summary>
         public static bool DoUpdateGUI;
 
+        public static string RenameTo
+        {
+            get => renameTo;
+            set { DoUpdateGUI = renameTo != value; renameTo = value;  }
+        }
+
         ///--------------------------------------------------------------------
         /// <summary>Gets a hint.</summary>
         ///
-        /// <param name="quantity">The quantity.</param>
-        /// <param name="ellipse"> (Optional) The ellipse.</param>
+        /// <param cleanName="quantity">The quantity.</param>
+        /// <param cleanName="ellipse"> (Optional) The ellipse.</param>
         ///
         /// <returns>The hint.</returns>
         ///--------------------------------------------------------------------
@@ -178,8 +186,8 @@ namespace XiRenameTool
         ///--------------------------------------------------------------------
         /// <summary>Gets a string.</summary>
         ///
-        /// <param name="name">The name.</param>
-        /// <param name="idx"> Zero-based index of the.</param>
+        /// <param cleanName="name">The cleanName.</param>
+        /// <param cleanName="idx"> Zero-based index of the.</param>
         ///
         /// <returns>The string.</returns>
         ///--------------------------------------------------------------------
@@ -222,8 +230,8 @@ namespace XiRenameTool
         ///--------------------------------------------------------------------
         /// <summary>Gets a string.</summary>
         ///
-        /// <param name="item">    The item.</param>
-        /// <param name="category">(Optional) The category.</param>
+        /// <param cleanName="item">    The item.</param>
+        /// <param cleanName="category">(Optional) The category.</param>
         ///
         /// <returns>The string.</returns>
         ///--------------------------------------------------------------------
@@ -233,17 +241,22 @@ namespace XiRenameTool
             item.UpdateName();
             var newName = string.Empty;
             if (renameMode == ERenameMode.Rename)
-                newName = Utils.MakeName(item.Name, XiRename.TargetConvention);
+            {
+                if (string.IsNullOrEmpty(renameTo))
+                    newName = Utils.MakeName(item.CleanName, XiRename.TargetConvention);
+                else
+                    newName = renameTo;
+            }
             else
-                newName = item.Name;
+                newName = item.CleanName;
             return GetString(newName, idx);
         }
 
         ///--------------------------------------------------------------------
-        /// <summary>Validates the name described by filePath.</summary>
+        /// <summary>Validates the cleanName described by filePath.</summary>
         ///
-        /// <param name="desc">        Full pathname of the file.</param>
-        /// <param name="fileCategory">Category the file belongs to.</param>
+        /// <param cleanName="desc">        Full pathname of the file.</param>
+        /// <param cleanName="fileCategory">Category the file belongs to.</param>
         ///
         /// <returns>True if it succeeds, false if it fails.</returns>
         ///--------------------------------------------------------------------
@@ -359,6 +372,7 @@ namespace XiRenameTool
 #if UNITY_EDITOR
             EditorPrefs.SetInt(string.Format(preferenceFormat, nameof(targetConvention)), (int)targetConvention);
             EditorPrefs.SetInt(string.Format(preferenceFormat, nameof(renameMode)), (int)renameMode);
+            EditorPrefs.SetString(string.Format(preferenceFormat, nameof(renameTo)), renameTo);
             EditorPrefs.SetInt(string.Format(preferenceFormat, nameof(fileCategoryIndex)), (int)fileCategoryIndex);
 #endif
         }
@@ -373,6 +387,7 @@ namespace XiRenameTool
             suffix.Precision = Settings.suffixPrecision;
             targetConvention = (ENameConvention)EditorPrefs.GetInt(string.Format(preferenceFormat, nameof(targetConvention)), (int)targetConvention);
             renameMode = (ERenameMode)EditorPrefs.GetInt(string.Format(preferenceFormat, nameof(renameMode)), (int)renameMode);
+            renameTo =  EditorPrefs.GetString(string.Format(preferenceFormat, nameof(renameTo)), renameTo);
             fileCategoryIndex = EditorPrefs.GetInt(string.Format(preferenceFormat, nameof(fileCategoryIndex)), (int)fileCategoryIndex);
 #endif
             OnChangeCtegory();
@@ -384,13 +399,14 @@ namespace XiRenameTool
 #if UNITY_EDITOR
             EditorPrefs.DeleteKey(string.Format(preferenceFormat, nameof(targetConvention)));
             EditorPrefs.DeleteKey(string.Format(preferenceFormat, nameof(renameMode)));
+            EditorPrefs.DeleteKey(string.Format(preferenceFormat, nameof(renameTo)));
             EditorPrefs.DeleteKey(string.Format(preferenceFormat, nameof(fileCategoryIndex)));
 #endif
         }
     }
 
     ///------------------------------------------------------------------------
-    /// <summary>A token is the part of the file name. Fore example
+    /// <summary>A token is the part of the file cleanName. Fore example
     /// 'foo_bar_baz' has 3 tokens ["foo","bar","baz"]. The token generator
     /// produces posible names for a token.</summary>
     ///------------------------------------------------------------------------
@@ -405,9 +421,9 @@ namespace XiRenameTool
         private ETokenType type;
         /// <summary>The suffix Mode.</summary>
         private ERenameAdvancedMode mode;
-        /// <summary>The name prefix.</summary>
+        /// <summary>The cleanName prefix.</summary>
         private string starts;
-        /// <summary>The name suffix.</summary>
+        /// <summary>The cleanName suffix.</summary>
         private string ends;
         /// <summary>The suffix counter.</summary>
         private int counter;
@@ -529,9 +545,9 @@ namespace XiRenameTool
         ///--------------------------------------------------------------------
         /// <summary>Constructor.</summary>
         ///
-        /// <param name="name">      The name.</param>
-        /// <param name="hasPopUp">     True if has pop up, false if not.</param>
-        /// <param name="hasCounter">   True if has counter, false if not.</param>
+        /// <param cleanName="name">      The cleanName.</param>
+        /// <param cleanName="hasPopUp">     True if has pop up, false if not.</param>
+        /// <param cleanName="hasCounter">   True if has counter, false if not.</param>
         ///--------------------------------------------------------------------
 
         public TokenGenerator(ETokenType type)
@@ -569,7 +585,7 @@ namespace XiRenameTool
         ///--------------------------------------------------------------------
         /// <summary>Gets the full string.</summary>
         ///
-        /// <param name="idx">Zero-based index of the.</param>
+        /// <param cleanName="idx">Zero-based index of the.</param>
         ///
         /// <returns>The string.</returns>
         ///--------------------------------------------------------------------
@@ -598,11 +614,16 @@ namespace XiRenameTool
             set
             {
                 var nCounter = 0;
-                if (int.TryParse(value, out nCounter) && counter != nCounter)
+  
+                if (int.TryParse(value, out nCounter)) 
                 {
-                    counter = nCounter;
-                    precision = (int)value.Replace(" ", "").Length;
-                    XiRename.DoUpdateGUI = true;
+                    Precision = (int)value.Replace(" ", "").Length;
+                    if (counter != nCounter)
+                    {
+                        counter = nCounter;
+                        precision = (int)value.Replace(" ", "").Length;
+                        XiRename.DoUpdateGUI = true;
+                    }
                 }
             }
         }
@@ -713,7 +734,7 @@ namespace XiRenameTool
 
     ///------------------------------------------------------------------------
     /// <summary>A file descriptor is a caching structure for storing the file
-    /// name path and tokens.</summary>
+    /// cleanName path and tokens.</summary>
     ///------------------------------------------------------------------------
 
     public class FileDescriptor
@@ -726,7 +747,7 @@ namespace XiRenameTool
         public bool IsDirectory;
         /// <summary>True if is temporary, false if not.</summary>
         public bool IsTemp;
-        /// <summary>Name of the file path and the name.</summary>
+        /// <summary>CleanName of the file path and the cleanName.</summary>
         public string OriginalPath;
         /// <summary>Full pathname of the file.</summary>
         public string DirectoryPath;
@@ -734,8 +755,6 @@ namespace XiRenameTool
         public string FileExt;
         /// <summary>Filename of the file.</summary>
         public string FileName;
-        /// <summary>Filename of the file.</summary>
-        public string ResultName;
 
         /// <summary>The tokens.</summary>
         public List<string> Tokens;
@@ -744,6 +763,74 @@ namespace XiRenameTool
         /// <summary>The mask.</summary>
         private uint Mask = 0;
 
+        /// <summary>CleanName of the automatic.</summary>
+        private string cleanName;
+
+        /// <summary>CleanName of the custom.</summary>
+        private string customName;
+        /// <summary>Filename of the file.</summary>
+        public string resultName;
+
+        ///--------------------------------------------------------------------
+        /// <summary>Gets a value indicating whether this object has custom
+        /// name.</summary>
+        ///
+        /// <value>True if this object has custom name, false if not.</value>
+        ///--------------------------------------------------------------------
+
+        public bool HasCustomName => !string.IsNullOrEmpty(customName);
+
+        ///--------------------------------------------------------------------
+        /// <summary>Gets or sets the name.</summary>
+        ///
+        /// <value>The name.</value>
+        ///--------------------------------------------------------------------
+
+        public string CleanName => cleanName;
+
+        ///--------------------------------------------------------------------
+        /// <summary>Gets or sets the name of the result.</summary>
+        ///
+        /// <value>The name of the result.</value>
+        ///--------------------------------------------------------------------
+        public string ResultName
+        {
+            get { return resultName; }
+            set
+            {
+                if (value != resultName)
+                {
+                    // Make custom name
+                    XiRename.DoUpdateGUI |= true;
+                    resultName = value;
+                }
+            }
+        }
+
+        ///--------------------------------------------------------------------
+        /// <summary>Gets or sets the name of the result or custom.</summary>
+        ///
+        /// <value>The name of the result or custom.</value>
+        ///--------------------------------------------------------------------
+
+        public string ResultOrCustomName 
+        {
+            get { return string.IsNullOrEmpty(customName) ? resultName : customName; }
+            set {
+                if (value != resultName)
+                {
+                    // Make custom name
+                    XiRename.DoUpdateGUI |= (customName != value);
+                    customName = value;
+                }
+                else
+                {
+                    // Make it to use auto name
+                    XiRename.DoUpdateGUI |= (customName != string.Empty);
+                    customName = string.Empty;
+                }
+            }
+        }
         /// <summary>List of colors of the states.</summary>
         private static Color[] stateColors = new Color[4] { Color.yellow, Color.gray, Color.red, Color.green };
 
@@ -790,17 +877,17 @@ namespace XiRenameTool
         public bool IsFile => !IsDirectory;
 
         ///--------------------------------------------------------------------
-        /// <summary>Gets the result name with extention.</summary>
+        /// <summary>Gets the result cleanName with extention.</summary>
         ///
-        /// <value>The result name with extention.</value>
+        /// <value>The result cleanName with extention.</value>
         ///--------------------------------------------------------------------
 
-        public string ResultNameWithExtention => $"{ResultName}{FileExt}";
+        public string ResultNameWithExtention => $"{ResultOrCustomName}{FileExt}";
 
         ///--------------------------------------------------------------------
         /// <summary>Constructor.</summary>
         ///
-        /// <param name="path">Full pathname of the file.</param>
+        /// <param cleanName="path">Full pathname of the file.</param>
         ///--------------------------------------------------------------------
 
         public FileDescriptor(UnityEngine.Object obj)
@@ -819,15 +906,7 @@ namespace XiRenameTool
         }
 
 
-        ///--------------------------------------------------------------------
-        /// <summary>Gets the name.</summary>
-        ///
-        /// <value>The name.</value>
-        ///--------------------------------------------------------------------
 
-        public string Name => name;
-
-        private string name;
 
         /// <summary>Updates the mask. Each bit equal (1) will remove one of Tokens</summary>
         public void UpdateName()
@@ -849,14 +928,14 @@ namespace XiRenameTool
                 }
                 bitMask <<= 1;
             }
-            name = str;
+            cleanName = str;
         }
 
         ///--------------------------------------------------------------------
         /// <summary>Removes this object.</summary>
         ///
-        /// <param name="mode">The mode.</param>
-        /// <param name="idx"> Zero-based index of the.</param>
+        /// <param cleanName="mode">The mode.</param>
+        /// <param cleanName="idx"> Zero-based index of the.</param>
         ///
         /// <returns>True if it succeeds, false if it fails.</returns>
         ///--------------------------------------------------------------------
@@ -868,9 +947,9 @@ namespace XiRenameTool
         }
 
         ///--------------------------------------------------------------------
-        /// <summary>Make a bitfield for removing name items.</summary>
+        /// <summary>Make a bitfield for removing cleanName items.</summary>
         ///
-        /// <param name="idx">Zero-based index of the.</param>
+        /// <param cleanName="idx">Zero-based index of the.</param>
         ///
         /// <returns>True if it succeeds, false if it fails.</returns>
         ///--------------------------------------------------------------------
@@ -898,8 +977,8 @@ namespace XiRenameTool
         ///   "foo-bar"  ->  "FooBar" "foo_bar"  ->  "FooBar" "foo bar"  ->
         ///   "FooBar".</summary>
         ///
-        /// <param name="str">       .</param>
-        /// <param name="capitalize">   (Optional) Should be capitalized
+        /// <param cleanName="str">       .</param>
+        /// <param cleanName="capitalize">   (Optional) Should be capitalized
         ///                             first character or not.</param>
         ///
         /// <returns>A string.</returns>
@@ -935,8 +1014,8 @@ namespace XiRenameTool
         ///--------------------------------------------------------------------
         /// <summary>Convert 'FooBar' to 'foo-bar'.</summary>
         ///
-        /// <param name="str">      .</param>
-        /// <param name="separator">(Optional) The separator.</param>
+        /// <param cleanName="str">      .</param>
+        /// <param cleanName="separator">(Optional) The separator.</param>
         ///
         /// <returns>A string.</returns>
         ///--------------------------------------------------------------------
@@ -981,7 +1060,7 @@ namespace XiRenameTool
         /// <exception cref="Exception">    Thrown when an exception error
         ///                                 condition occurs.</exception>
         ///
-        /// <param name="name">          The name.</param>
+        /// <param cleanName="name">          The cleanName.</param>
         /// <param fileName="convention">The convention.</param>
         ///
         /// <returns>A string.</returns>
@@ -1013,7 +1092,7 @@ namespace XiRenameTool
         /// <exception cref="Exception">    Thrown when an exception error
         ///                                 condition occurs.</exception>
         ///
-        /// <param name="name">          The name.</param>
+        /// <param cleanName="name">          The cleanName.</param>
         /// <param fileName="convention">The convention.</param>
         ///
         /// <returns>A string.</returns>
@@ -1041,12 +1120,12 @@ namespace XiRenameTool
 
 
         ///--------------------------------------------------------------------
-        /// <summary>Makes a name.</summary>
+        /// <summary>Makes a cleanName.</summary>
         ///
         /// <exception cref="Exception">    Thrown when an exception error
         ///                                 condition occurs.</exception>
         ///
-        /// <param name="name">          The name.</param>
+        /// <param cleanName="name">          The cleanName.</param>
         /// <param fileName="convention">The convention.</param>
         ///
         /// <returns>A string.</returns>
