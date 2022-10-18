@@ -27,7 +27,7 @@ namespace XiRenameTool
     }
 
     /// <summary>Values that represent file results.</summary>
-    public enum EFileResult
+    public enum EFileState
     {
         /// <summary>An enum constant representing the undefined type option.</summary>
         Undefined,
@@ -248,10 +248,10 @@ namespace XiRenameTool
         /// <returns>True if it succeeds, false if it fails.</returns>
         ///--------------------------------------------------------------------
 
-        public static EFileResult ValidateName(FileDescriptor desc, string fileCategory)
+        public static EFileState ValidateName(FileDescriptor desc, string fileCategory)
         {
-            desc.ValidationStatus = Settings.ValidateName(desc, fileCategory);
-            return desc.ValidationStatus;
+            desc.State = Settings.ValidateName(desc, fileCategory);
+            return desc.State;
         }
 
 
@@ -718,9 +718,10 @@ namespace XiRenameTool
 
     public class FileDescriptor
     {
+        /// <summary>The reference to selected object.</summary>
         public UnityEngine.Object Reference;
         /// <summary>The validation status.</summary>
-        public EFileResult ValidationStatus;
+        public EFileState State;
         /// <summary>True if is directory, false if not.</summary>
         public bool IsDirectory;
         /// <summary>True if is temporary, false if not.</summary>
@@ -742,6 +743,17 @@ namespace XiRenameTool
         public int Index = 0;
         /// <summary>The mask.</summary>
         private uint Mask = 0;
+
+        /// <summary>List of colors of the states.</summary>
+        private static Color[] stateColors = new Color[4] { Color.yellow, Color.gray, Color.red, Color.green };
+
+        ///--------------------------------------------------------------------
+        /// <summary>Gets the color of the state.</summary>
+        ///
+        /// <value>The color of the state.</value>
+        ///--------------------------------------------------------------------
+
+        public Color StateColor => stateColors[(int)State];
 
         ///--------------------------------------------------------------------
         /// <summary>Gets a value indicating whether this object is valid.</summary>
@@ -767,7 +779,7 @@ namespace XiRenameTool
         /// <value>True if this object is renamable, false if not.</value>
         ///--------------------------------------------------------------------
 
-        public bool IsRenamable => ValidationStatus != EFileResult.Ignore && ValidationStatus != EFileResult.Undefined;
+        public bool IsRenamable => State != EFileState.Ignore && State != EFileState.Undefined;
 
         ///--------------------------------------------------------------------
         /// <summary>Gets a value indicating whether this object is file.</summary>
