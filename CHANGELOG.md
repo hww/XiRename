@@ -1,3 +1,10 @@
+## [1.0.10](https://github.com/hww/XiRename/compare/v1.0.9...v1.0.10) (2022-10-18)
+
+
+### Bug Fixes
+
+* **code:** Added custom file name per item ([b63dc52](https://github.com/hww/XiRename/commit/b63dc526cb77752acad636bc6341dd4787788971))
+
 ## [1.0.9](https://github.com/hww/XiRename/compare/v1.0.8...v1.0.9) (2022-10-18)
 
 
