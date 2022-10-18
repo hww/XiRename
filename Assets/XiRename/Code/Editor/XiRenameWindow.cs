@@ -43,7 +43,7 @@ namespace XiRenameTool.Editor
             XiRename.ValidateName(item, XiRename.FileCategory);
             rect.y += 2; // to centrify text field
             const int gapWidth = 4;
-            const int iconWidth = 16;
+            const int iconWidth = 4;
             const int iconWidthAndGap = iconWidth + gapWidth;
             var rWidth = rect.width * 0.5f;
             var lWidth = rWidth - iconWidthAndGap - gapWidth;
