@@ -1,6 +1,7 @@
 using NaughtyAttributes;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using XiCore.StringTools;
 
@@ -14,18 +15,33 @@ namespace XiRenameTool
     /// <summary>An xi rename settings.</summary>
     [CreateAssetMenu(fileName = "XiRenameSettings", menuName = "Xi/Settins/XiRenameSettings", order = 0)]
     public class XiRenameSettings : ScriptableObject
-    { 
+    {
 
-        public List<ETokenType> fieldOrder = new List<ETokenType>();
+        /// <summary>The name tokens order.</summary>
+        public List<ETokenType> nameTokensOrder = new List<ETokenType>();
 
-        public ENameConvention nameConvention = ENameConvention.PascalCase;
+        /// <summary>Default naming convention.</summary>
+        public ENameConvention namingConvention = ENameConvention.PascalCase;
+        /// <summary>The prefix default precision.</summary>
         public int prefixPrecision = 2;
+        /// <summary>The suffix default precision.</summary>
         public int suffixPrecision = 2;
+        /// <summary>Full pathname of the ignore file.</summary>
         public string[] ignorePath;
 
         /// <summary>List of file types.</summary>
         public List<FileType> fileTypes = new List<FileType>();
 
+        ///--------------------------------------------------------------------
+        /// <summary>Gets options for controlling the file category.</summary>
+        ///
+        /// <value>Options that control the file category.</value>
+        ///--------------------------------------------------------------------
+
+        public string[] FileCategoryOptions => fileCategoryOptions ??= fileTypes.Select(o => o.Category).Distinct().ToArray();
+
+        /// <summary>Options for controlling the file category.</summary>
+        private string[] fileCategoryOptions;
 
         ///--------------------------------------------------------------------
         /// <summary>Query if 'filePath' is ignored.</summary>
@@ -34,7 +50,7 @@ namespace XiRenameTool
         ///
         /// <returns>True if ignored, false if not.</returns>
         ///--------------------------------------------------------------------
-        
+
         public bool IsIgnored(string filePath)
         {
             foreach (var ignore in ignorePath)
@@ -45,11 +61,20 @@ namespace XiRenameTool
             return false;
         }
 
-        public EFileResult ValidateName(FileDescriptor desc, string fileCategory)
+        ///--------------------------------------------------------------------
+        /// <summary>Validates the name for simgle category.</summary>
+        ///
+        /// <param name="file">        The file descriptor.</param>
+        /// <param name="fileCategory">Category the file belongs to.</param>
+        ///
+        /// <returns>An EFileResult.</returns>
+        ///--------------------------------------------------------------------
+
+        public EFileResult ValidateName(FileDescriptor file, string fileCategory)
         {
-            if (!desc.IsValid)
+            if (!file.IsValid)
                 return EFileResult.Invalid;
-            if (IsIgnored(desc.DirectoryPath))
+            if (IsIgnored(file.DirectoryPath))
                 return EFileResult.Ignore;
             var result = EFileResult.Invalid;
             var categories = 0;
@@ -58,7 +83,7 @@ namespace XiRenameTool
                 if (type.Category == fileCategory)
                 {
                     categories++;
-                    result = type.ValidateName(desc);
+                    result = type.ValidateName(file);
                     if (result == EFileResult.Valid)
                         return result;
                 }
@@ -75,7 +100,7 @@ namespace XiRenameTool
         /// <returns>A FileType.</returns>
         ///--------------------------------------------------------------------
 
-        public FileType Find(string name, bool displayError = false)
+        public FileType FindFileTypeByName(string name, bool displayError = false)
         {
             var result = fileTypes.Find(o => o.Name == name);
             if (displayError && result == null)
@@ -92,10 +117,10 @@ namespace XiRenameTool
         /// <returns>The found category.</returns>
         ///--------------------------------------------------------------------
 
-        public FileType FindByCategory(string category, bool displayError = false)
+        public List<FileType> FindFileTypesByCategory(string category, bool displayError = false)
         {
-            var result = fileTypes.Find(o => o.Category == category);
-            if (displayError && result == null)
+            var result = fileTypes.FindAll(o => o.Category == category).ToList();
+            if (displayError && result.Count == 0)
                 Debug.LogError($"Can't find file type '{category}'", this);
             return result;
         }
@@ -108,7 +133,7 @@ namespace XiRenameTool
         /// <param name="suffixes">The suffixes.</param>
         ///--------------------------------------------------------------------
 
-        public void FindOptionsByCategory(string category, List<StringPair> prefixes, List<StringPair> suffixes)
+        public void FindFileOptionsByCategory(string category, List<StringPair> prefixes, List<StringPair> suffixes)
         {
             Debug.Assert(prefixes != null);
             Debug.Assert(suffixes != null);
@@ -133,122 +158,136 @@ namespace XiRenameTool
 
         public void OnValidate()
         {
+            fileCategoryOptions = null;
             foreach (FileType type in fileTypes)
                 type.OnValidate();
         }
 
 
         /// <summary>Initializes the defaut.</summary>
-        [Button()]
+        [Button("Reset All Settings To Default Values")]
         public void InitializeDefaut()
         {
-            fieldOrder.Clear();
-            fieldOrder.Add(ETokenType.Prefix);
-            fieldOrder.Add(ETokenType.Name);
-            fieldOrder.Add(ETokenType.Variant);
-            fieldOrder.Add(ETokenType.Suffix);
+            // Define the order of tokens
+            nameTokensOrder.Clear();
+            nameTokensOrder.Add(ETokenType.Prefix);
+            nameTokensOrder.Add(ETokenType.Name);
+            nameTokensOrder.Add(ETokenType.Variant);
+            nameTokensOrder.Add(ETokenType.Suffix);
 
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
             // Taken from https://github.com/justinwasilenko/Unity-Style-Guide
             // But modified for my needs
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
             fileTypes.Clear();
-            var kind = Define("Models/FBX", "Models", ".fbx, .ma, .mb");
-            kind.DefinePreffix("Characters", "CH");
-            kind.DefinePreffix("Vehicles", "VH");
-            kind.DefinePreffix("Weapons", "WP");
-            kind.DefinePreffix("Static Mesh", "SM");
-            kind.DefinePreffix("Skeletal Mesh", "SK");
-            kind.DefinePreffix("Skeleton", "SKEL");
-            kind.DefinePreffix("Rig", "RIG");
+            var type = Define("Models/FBX", "Models", ".fbx, .ma, .mb");
+            type.DefinePreffix("Characters", "CH");
+            type.DefinePreffix("Vehicles", "VH");
+            type.DefinePreffix("Weapons", "WP");
+            type.DefinePreffix("Static Mesh", "SM");
+            type.DefinePreffix("Skeletal Mesh", "SK");
+            type.DefinePreffix("Skeleton", "SKEL");
+            type.DefinePreffix("Rig", "RIG");
+
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-            kind = Define("Models/MAX", "Models", ".max");
-            kind.DefineSuffix("MAX Mesh LOD", "_mesh_lod0*");
-            kind.DefineSuffix("MAX Mesh Collider", "collider");
+
+            type = Define("Models/MAX", "Models", ".max");
+            type.DefineSuffix("MAX Mesh LOD", "_mesh_lod0*");
+            type.DefineSuffix("MAX Mesh Collider", "collider");
+
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-            kind = Define("Animations", null, ".fbx, .ma, .mb");
-            kind.DefinePreffix("Animation Clip", "A");
-            kind.DefinePreffix("Animation Controller", "AC");
-            kind.DefinePreffix("Avatar Mask", "AM");
-            kind.DefinePreffix("Morph Target", "MT");
+
+            type = Define("Animations", null, ".fbx, .ma, .mb");
+            type.DefinePreffix("Animation Clip", "A");
+            type.DefinePreffix("Animation Controller", "AC");
+            type.DefinePreffix("Avatar Mask", "AM");
+            type.DefinePreffix("Morph Target", "MT");
+
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-            kind = Define("Artificial Intelligence", "Assets", ".asset");
-            kind.DefinePreffix("AI Controller", "AIC");
-            kind.DefinePreffix("Behavior Tree", "BT");
-            kind.DefinePreffix("Blackboard", "BB");
-            kind.DefinePreffix("Decorator", "BTDecorator");
-            kind.DefinePreffix("Service", "BTService");
-            kind.DefinePreffix("Task", "BTTask");
-            kind.DefinePreffix("Environment Query", "EQS");
-            kind.DefinePreffix("EnvQueryContext", "EQC");
-            kind.DefineSuffix("EnvQueryContext", "Context");
+
+            type = Define("Artificial Intelligence", "Assets", ".asset");
+            type.DefinePreffix("AI Controller", "AIC");
+            type.DefinePreffix("Behavior Tree", "BT");
+            type.DefinePreffix("Blackboard", "BB");
+            type.DefinePreffix("Decorator", "BTDecorator");
+            type.DefinePreffix("Service", "BTService");
+            type.DefinePreffix("Task", "BTTask");
+            type.DefinePreffix("Environment Query", "EQS");
+            type.DefinePreffix("EnvQueryContext", "EQC");
+            type.DefineSuffix("EnvQueryContext", "Context");
+
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-            kind = Define("Other Assets", "Assets", ".asset");
-            kind.DefinePreffix("Scriptable Object", "SO");
+
+            type = Define("Other Assets", "Assets", ".asset");
+            type.DefinePreffix("Scriptable Object", "SO");
+
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-            kind = Define("Prefabs", "Prefabs", ".prefab");
-            kind.DefinePreffix("Prefab", "P");
+
+            type = Define("Prefabs", "Prefabs", ".prefab");
+            type.DefinePreffix("Prefab", "P");
+
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-            kind = Define("Textures", "Textures", ".tga, .bmp, .jpg, .png, .gif, .psd");
-            kind.DefinePreffix("Texture", "T");
-            kind.DefinePreffix("Texture Cube", "TC");
-            kind.DefinePreffix("Media Texture", "MT");
-            kind.DefinePreffix("Render Target", "RT");
-            kind.DefinePreffix("Cube Render Target", "RTC");
-            kind.DefinePreffix("Light Profile", "TLP");
+
+            type = Define("Textures", "Textures", ".tga, .bmp, .jpg, .png, .gif, .psd");
+            type.DefinePreffix("Texture", "T", true);
+            type.DefinePreffix("Media Texture", "MT");
+            type.DefinePreffix("Render Target", "RT");
+            type.DefinePreffix("Cube Texture", "TC");
+            type.DefinePreffix("Cube Render Target", "RTC");
+            type.DefinePreffix("Light Profile", "TLP");
             
-            kind.DefineSuffix("Albedo", "RGB");
-            kind.DefineSuffix("Albedo+Opacity", "RGBA");
-            kind.DefineSuffix("Opacity", "A");
-            kind.DefineSuffix("Roughness)", "R");
-            kind.DefineSuffix("Metallic)", "MT");
-            kind.DefineSuffix("Metallic+Roughness)", "MTR");
-            kind.DefineSuffix("Specular", "SP");
-            kind.DefineSuffix("Metallic)", "SPR");
-            kind.DefineSuffix("Emmition", "EM");
-            kind.DefineSuffix("Normal", "N");
-            kind.DefineSuffix("Displacement", "DP");
-            kind.DefineSuffix("Ambient Occlusion", "AO");
-            kind.DefineSuffix("Height Map", "H");
-            kind.DefineSuffix("Flow Map", "FM");
-            kind.DefineSuffix("Light Map", "L");
-            kind.DefineSuffix("Bump", "B");
-            kind.DefineSuffix("Mask", "M");
+            type.DefineSuffix("Albedo", "RGB", true);
+            type.DefineSuffix("Albedo+Opacity", "RGBA");
+            type.DefineSuffix("Opacity", "A");
+            type.DefineSuffix("Roughness)", "R");
+            type.DefineSuffix("Metallic)", "MT");
+            type.DefineSuffix("Metallic+Roughness)", "MTR");
+            type.DefineSuffix("Specular", "SP");
+            type.DefineSuffix("Metallic)", "SPR");
+            type.DefineSuffix("Emmition", "EM");
+            type.DefineSuffix("Normal", "N");
+            type.DefineSuffix("Displacement", "DP");
+            type.DefineSuffix("Ambient Occlusion", "AO");
+            type.DefineSuffix("Height Map", "H");
+            type.DefineSuffix("Flow Map", "FM");
+            type.DefineSuffix("Light Map", "L");
+            type.DefineSuffix("Bump", "B");
+            type.DefineSuffix("Mask", "M");
             // It is generally acceptable to include an Alpha/ Opacity layer 
             // in your Diffuse/ Albedo's alpha channel and as this is common 
             // practice, adding A to the _D category is optional.
-            kind.DefineSuffix("Texture (Packed)", "?");
+            type.DefineSuffix("Texture (Packed)", "?");
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-            kind = Define("Miscellaneous", null, ".asset");
-            kind.DefinePreffix("Universal Render Pipeline Asset", "URP");
-            kind.DefinePreffix("Post Process Volume Profile", "PP");
+            type = Define("Miscellaneous", null, ".asset");
+            type.DefinePreffix("Universal Render Pipeline Asset", "URP");
+            type.DefinePreffix("Post Process Volume Profile", "PP");
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-            kind = Define("Physics", null, ".physicMaterial, .physicsMaterial2D");
-            kind.DefinePreffix("Physical Material", "PM");
+            type = Define("Physics", null, ".physicMaterial, .physicsMaterial2D");
+            type.DefinePreffix("Physical Material", "PM");
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-            kind = Define("Audio", null, ".mp3, .wav");
-            kind.DefinePreffix("Audio (Class)", "");
-            kind.DefinePreffix("Audio (Clip)", "A");
-            kind.DefinePreffix("Audio (Mixer)", "AM");
-            kind.DefinePreffix("Audio (Voice)", "AV");
+            type = Define("Audio", null, ".mp3, .wav");
+            type.DefinePreffix("Audio (Class)", "");
+            type.DefinePreffix("Audio (Clip)", "A");
+            type.DefinePreffix("Audio (Mixer)", "AM");
+            type.DefinePreffix("Audio (Voice)", "AV");
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-            kind = Define("User Interface", null, ".asset");
-            kind.DefinePreffix("UI (Interface)", "UI");
-            kind.DefinePreffix("UI (Font)", "Font");
-            kind.DefinePreffix("UI (Sprite)", "T");
-            kind.DefineSuffix("UI (Sprite)", "GUI");
+            type = Define("User Interface", null, ".asset");
+            type.DefinePreffix("UI (Interface)", "UI");
+            type.DefinePreffix("UI (Font)", "Font");
+            type.DefinePreffix("UI (Sprite)", "T");
+            type.DefineSuffix("UI (Sprite)", "GUI");
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-            kind = Define("Effects", "Prefabs", ".prefab");
-            kind.DefinePreffix("FX (Particle System)", "PS");
+            type = Define("Effects", "Prefabs", ".prefab");
+            type.DefinePreffix("FX (Particle System)", "PS");
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-            kind = Define("Shaders", "Shaders", ".compute, .raytrace, .shadervariants, .shader");
-            kind.DefinePreffix("Shader", "SH");
+            type = Define("Shaders", "Shaders", ".compute, .raytrace, .shadervariants, .shader");
+            type.DefinePreffix("Shader", "SH");
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-            kind = Define("Fonts", "Fonts", ".ttf, .otf");
-            kind.DefinePreffix("F", "F");
+            type = Define("Fonts", "Fonts", ".ttf, .otf");
+            type.DefinePreffix("F", "F");
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-            kind = Define("Scenes", "Schemes", ".scene, .scenetemplate");
-            kind.DefinePreffix("S", "F");
+            type = Define("Scenes", "Schemes", ".scene, .scenetemplate");
+            type.DefinePreffix("S", "F");
         }
 
         ///--------------------------------------------------------------------
@@ -264,7 +303,7 @@ namespace XiRenameTool
 
         private FileType Define(string name, string category, string extentions, string description = null)
         {
-            var type = Find(name, false);
+            var type = FindFileTypeByName(name, false);
             if (type == null)
             {
                 type = new FileType(name, category, extentions);
@@ -272,7 +311,6 @@ namespace XiRenameTool
             }
             return type;
         }
-
     }
 
     /// <summary>A string pair.</summary>
@@ -424,6 +462,14 @@ namespace XiRenameTool
             return idx >= 0 ? Suffixes[idx].Value : null;
         }
 
+        ///--------------------------------------------------------------------
+        /// <summary>Define preffix.</summary>
+        ///
+        /// <param category="category">The file type category.</param>
+        /// <param name="prefix">      The preffix string.</param>
+        /// <param name="priority">    (Optional) True to make it hi priority.</param>
+        ///--------------------------------------------------------------------
+
         public void DefinePreffix(string name, string prefix, bool priority = true)
         {
             if (priority)
@@ -431,6 +477,15 @@ namespace XiRenameTool
             else
                 Prefixes.Add(new StringPair(name, prefix));
         }
+
+        ///--------------------------------------------------------------------
+        /// <summary>Define suffix.</summary>
+        ///
+        /// <param category="category">The file type category.</param>
+        /// <param name="prefix">      The suffix string.</param>
+        /// <param name="priority">    (Optional) True to make it hi priority.</param>
+        ///--------------------------------------------------------------------
+
         public void DefineSuffix(string name, string prefix, bool priority = true)
         {
             if (priority)
@@ -443,10 +498,10 @@ namespace XiRenameTool
         /// <summary>Called when the script is loaded or a counter is changed in the
         /// inspector (Called in the editor only)</summary>
         ///------------------------------------------------------------------------
-
+        
         public void OnValidate()
         {
-            _cachedExtentions = null;
+            _cachedExtentions = null; 
         }
     }
 
