@@ -55,16 +55,16 @@ namespace XiRenameTool.Editor
             var rectR = new Rect(x, rect.y, rWidth, EditorGUIUtility.singleLineHeight);
 
             EditorGUILayout.BeginHorizontal();
+            EditorGUI.DrawRect(rectI, item.StateColor);
             if (item.IsRenamable)
             {
-                EditorGUI.DrawRect(rectI, item.IsValid ? Color.green : Color.red);
+
                 EditorGUI.LabelField(rectL, item.FileName);
                 item.ResultName = XiRename.GetString(item, item.Index, XiRename.FileCategory);
                 item.ResultName = EditorGUI.TextField(rectR, item.ResultName);
             }
             else
             {
-                EditorGUI.DrawRect(rectI, Color.gray);
                 EditorGUI.LabelField(rectL, item.FileName);
                 EditorGUI.LabelField(rectR, string.Empty);
             }

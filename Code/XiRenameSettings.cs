@@ -67,16 +67,16 @@ namespace XiRenameTool
         /// <param name="file">        The file descriptor.</param>
         /// <param name="fileCategory">Category the file belongs to.</param>
         ///
-        /// <returns>An EFileResult.</returns>
+        /// <returns>An EFileState.</returns>
         ///--------------------------------------------------------------------
 
-        public EFileResult ValidateName(FileDescriptor file, string fileCategory)
+        public EFileState ValidateName(FileDescriptor file, string fileCategory)
         {
             if (!file.IsValid)
-                return EFileResult.Invalid;
+                return EFileState.Invalid;
             if (IsIgnored(file.DirectoryPath))
-                return EFileResult.Ignore;
-            var result = EFileResult.Invalid;
+                return EFileState.Ignore;
+            var result = EFileState.Invalid;
             var categories = 0;
             foreach (var type in fileTypes)
             {
@@ -84,11 +84,11 @@ namespace XiRenameTool
                 {
                     categories++;
                     result = type.ValidateName(file);
-                    if (result == EFileResult.Valid)
+                    if (result == EFileState.Valid)
                         return result;
                 }
             }
-            return categories != 0 ? result : EFileResult.Undefined;
+            return categories != 0 ? result : EFileState.Undefined;
         }
 
         ///--------------------------------------------------------------------
@@ -402,17 +402,17 @@ namespace XiRenameTool
             return System.Array.IndexOf<string>(Extentions, fileExtention) >= 0;
         }
 
-        public EFileResult ValidateName(FileDescriptor desc)
+        public EFileState ValidateName(FileDescriptor desc)
         {
             if (!VerifyExtention(desc.FileExt))
-                return EFileResult.Undefined;
+                return EFileState.Undefined;
             if (desc.Tokens.Count == 1)
             {
                 // The name does not have preffix or suffix
                 // It should be allowed by the empty value 
                 var prefix = FindPrefix("");
                 var suffix = FindSuffix("");
-                return (prefix!=null && suffix!=null) ? EFileResult.Valid : EFileResult.Invalid;
+                return (prefix!=null && suffix!=null) ? EFileState.Valid : EFileState.Invalid;
             }
             else
             {
@@ -427,7 +427,7 @@ namespace XiRenameTool
                     if (suffix != null)
                         suffixes++;
                 }
-                return (prefixes > 0 && suffixes > 0) ? EFileResult.Valid : EFileResult.Invalid;
+                return (prefixes > 0 && suffixes > 0) ? EFileState.Valid : EFileState.Invalid;
             }
 
         }
