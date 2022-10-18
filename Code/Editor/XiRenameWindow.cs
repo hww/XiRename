@@ -61,7 +61,7 @@ namespace XiRenameTool.Editor
 
                 EditorGUI.LabelField(rectL, item.FileName);
                 item.ResultName = XiRename.GetString(item, item.Index, XiRename.FileCategory);
-                item.ResultName = EditorGUI.TextField(rectR, item.ResultName);
+                item.ResultOrCustomName = EditorGUI.TextField(rectR, item.ResultOrCustomName);
             }
             else
             {
@@ -113,12 +113,9 @@ namespace XiRenameTool.Editor
         {
             GUILayout.Box(banner);
             DrawUILine(uiLineColor);
-            GUILayout.Label("Name Tool", EditorStyles.boldLabel);
-            EditorGUILayout.HelpBox("Choose one of the possible file naming conventions.", MessageType.None);
+            GUILayout.Label("Settings", EditorStyles.boldLabel);
+            EditorGUILayout.HelpBox("Choose one of the possible file naming conventions and file type.", MessageType.None);
             XiRename.TargetConvention = (ENameConvention)EditorGUILayout.EnumPopup("Target Convention:", XiRename.TargetConvention);
-
-            // - - - - - - - - - - - - - - - - - -
-            DrawUILine(uiLineColor);
             XiRename.FileCategoryIndex = EditorGUILayout.Popup("File Types:", XiRename.FileCategoryIndex, XiRename.FileCategoryOptions);
             // - - - - - - - - - - - - - - - - - -
             var fieldOrder = XiRename.FieldOrder;
@@ -140,6 +137,7 @@ namespace XiRenameTool.Editor
             }
             else
             {
+                EditorGUILayout.HelpBox("Edit field to make a custom name or clear it to use a generated one.", MessageType.None);
                 OnBeforeRenderOrderableList();
                 orderableList?.DoLayoutList();
             }
@@ -148,8 +146,6 @@ namespace XiRenameTool.Editor
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("Rename All"))
                 RenameAllFiles(false);
-            if (GUILayout.Button("Rename One"))
-                RenameOneFile(false);
             GUILayout.EndHorizontal();
             if (XiRename.DoUpdateGUI)
             {
@@ -166,16 +162,6 @@ namespace XiRenameTool.Editor
             Selection.objects = new Object[0];
         }
 
-        private void RenameOneFile(bool dryRun)
-        {
-            if (selectedFiles.Count > 0)
-            {
-                var item = selectedFiles[0];
-                RenameAsset(item, dryRun);
-                selectedFiles.RemoveAt(0);
-                Selection.objects = selectedFiles.ConvertAll(o => o.Reference).ToArray();
-            }
-        }
 
         private void RenameAsset(FileDescriptor item, bool dryRun)
         {
@@ -213,9 +199,11 @@ namespace XiRenameTool.Editor
             switch (chapter)
             {
                 case ETokenType.Name:
-                    GUILayout.Label($"[{idx}] Name Tool:", EditorStyles.boldLabel);
+                    GUILayout.Label($"[{idx}] CleanName Tool:", EditorStyles.boldLabel);
                     EditorGUILayout.HelpBox("How should the file name change except for changing the prefix and suffix.", MessageType.None);
                     XiRename.RenameMode = (ERenameMode)EditorGUILayout.EnumPopup("Rename Action:", XiRename.RenameMode);
+                    if (XiRename.renameMode != ERenameMode.Keep)
+                        XiRename.RenameTo = EditorGUILayout.TextField("New CleanName:", XiRename.RenameTo);
                     break;
                 case ETokenType.Prefix:
                     OnGUI_Desinator($"[{idx}] Prefix Tool", XiRename.prefix);

@@ -17,7 +17,7 @@ namespace XiRenameTool
     public class XiRenameSettings : ScriptableObject
     {
 
-        /// <summary>The name tokens order.</summary>
+        /// <summary>The cleanName tokens order.</summary>
         public List<ETokenType> nameTokensOrder = new List<ETokenType>();
 
         /// <summary>Default naming convention.</summary>
@@ -46,7 +46,7 @@ namespace XiRenameTool
         ///--------------------------------------------------------------------
         /// <summary>Query if 'filePath' is ignored.</summary>
         ///
-        /// <param name="filePath">Full pathname of the file.</param>
+        /// <param cleanName="filePath">Full pathname of the file.</param>
         ///
         /// <returns>True if ignored, false if not.</returns>
         ///--------------------------------------------------------------------
@@ -62,10 +62,10 @@ namespace XiRenameTool
         }
 
         ///--------------------------------------------------------------------
-        /// <summary>Validates the name for simgle category.</summary>
+        /// <summary>Validates the cleanName for simgle category.</summary>
         ///
-        /// <param name="file">        The file descriptor.</param>
-        /// <param name="fileCategory">Category the file belongs to.</param>
+        /// <param cleanName="file">        The file descriptor.</param>
+        /// <param cleanName="fileCategory">Category the file belongs to.</param>
         ///
         /// <returns>An EFileState.</returns>
         ///--------------------------------------------------------------------
@@ -94,8 +94,8 @@ namespace XiRenameTool
         ///--------------------------------------------------------------------
         /// <summary>Searches for the first match.</summary>
         ///
-        /// <param name="name">        The name.</param>
-        /// <param name="displayError"> (Optional) True to display error.</param>
+        /// <param cleanName="name">        The cleanName.</param>
+        /// <param cleanName="displayError"> (Optional) True to display error.</param>
         ///
         /// <returns>A FileType.</returns>
         ///--------------------------------------------------------------------
@@ -111,8 +111,8 @@ namespace XiRenameTool
         ///--------------------------------------------------------------------
         /// <summary>Searches for the first category.</summary>
         ///
-        /// <param name="category">    The category.</param>
-        /// <param name="displayError"> (Optional) True to display error.</param>
+        /// <param cleanName="category">    The category.</param>
+        /// <param cleanName="displayError"> (Optional) True to display error.</param>
         ///
         /// <returns>The found category.</returns>
         ///--------------------------------------------------------------------
@@ -128,9 +128,9 @@ namespace XiRenameTool
         ///--------------------------------------------------------------------
         /// <summary>Searches for the first options by category.</summary>
         ///
-        /// <param name="category">The category.</param>
-        /// <param name="prefixes">The prefixes.</param>
-        /// <param name="suffixes">The suffixes.</param>
+        /// <param cleanName="category">The category.</param>
+        /// <param cleanName="prefixes">The prefixes.</param>
+        /// <param cleanName="suffixes">The suffixes.</param>
         ///--------------------------------------------------------------------
 
         public void FindFileOptionsByCategory(string category, List<StringPair> prefixes, List<StringPair> suffixes)
@@ -293,10 +293,10 @@ namespace XiRenameTool
         ///--------------------------------------------------------------------
         /// <summary>Defines.</summary>
         ///
-        /// <param name="name">       The name.</param>
-        /// <param name="category">   The category.</param>
-        /// <param name="extentions"> The extentions.</param>
-        /// <param name="description">(Optional) The description.</param>
+        /// <param cleanName="name">       The cleanName.</param>
+        /// <param cleanName="category">   The category.</param>
+        /// <param cleanName="extentions"> The extentions.</param>
+        /// <param cleanName="description">(Optional) The description.</param>
         ///
         /// <returns>A FileType.</returns>
         ///--------------------------------------------------------------------
@@ -376,7 +376,7 @@ namespace XiRenameTool
         /// <summary>Constructor.</summary>
         ///
         /// <param category="category">   The file type category.</param>
-        /// <param category="category">   The category is equal to name or different.</param>
+        /// <param category="category">   The category is equal to cleanName or different.</param>
         /// <param category="extentions">  The list of possible file extentions.</param>
         /// <param category="description"> (Optional) The file type description.</param>
         ///------------------------------------------------------------------------
@@ -408,7 +408,7 @@ namespace XiRenameTool
                 return EFileState.Undefined;
             if (desc.Tokens.Count == 1)
             {
-                // The name does not have preffix or suffix
+                // The cleanName does not have preffix or suffix
                 // It should be allowed by the empty value 
                 var prefix = FindPrefix("");
                 var suffix = FindSuffix("");
@@ -466,8 +466,8 @@ namespace XiRenameTool
         /// <summary>Define preffix.</summary>
         ///
         /// <param category="category">The file type category.</param>
-        /// <param name="prefix">      The preffix string.</param>
-        /// <param name="priority">    (Optional) True to make it hi priority.</param>
+        /// <param cleanName="prefix">      The preffix string.</param>
+        /// <param cleanName="priority">    (Optional) True to make it hi priority.</param>
         ///--------------------------------------------------------------------
 
         public void DefinePreffix(string name, string prefix, bool priority = true)
@@ -482,8 +482,8 @@ namespace XiRenameTool
         /// <summary>Define suffix.</summary>
         ///
         /// <param category="category">The file type category.</param>
-        /// <param name="prefix">      The suffix string.</param>
-        /// <param name="priority">    (Optional) True to make it hi priority.</param>
+        /// <param cleanName="prefix">      The suffix string.</param>
+        /// <param cleanName="priority">    (Optional) True to make it hi priority.</param>
         ///--------------------------------------------------------------------
 
         public void DefineSuffix(string name, string prefix, bool priority = true)

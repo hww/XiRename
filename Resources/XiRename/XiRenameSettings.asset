@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b6091002058581f45a90415dd14a32b2, type: 3}
   m_Name: XiRenameSettings
   m_EditorClassIdentifier: 
-  fieldOrder: 00000000010000000300000002000000
-  nameConvention: 0
+  nameTokensOrder: 00000000010000000300000002000000
+  namingConvention: 0
   prefixPrecision: 2
   suffixPrecision: 2
   ignorePath:
@@ -46,9 +46,9 @@ MonoBehaviour:
     extentions: .max
     prefixes: []
     suffixes:
-    - Name: Mesh Collider
+    - Name: MAX Mesh Collider
       Value: collider
-    - Name: Mesh
+    - Name: MAX Mesh LOD
       Value: _mesh_lod0*
   - Name: Animations
     Category: Animations
@@ -109,39 +109,55 @@ MonoBehaviour:
     Description: 
     extentions: .tga, .bmp, .jpg, .png, .gif, .psd
     prefixes:
-    - Name: Texture Light Profile
+    - Name: Light Profile
       Value: TLP
     - Name: Cube Render Target
       Value: RTC
+    - Name: Cube Texture
+      Value: TC
     - Name: Render Target
       Value: RT
     - Name: Media Texture
       Value: MT
-    - Name: Texture Cube
-      Value: TC
     - Name: Texture
       Value: T
     suffixes:
     - Name: Texture (Packed)
       Value: '?'
-    - Name: Texture (Specular)
-      Value: S
-    - Name: Texture (Mask)
+    - Name: Mask
       Value: M
-    - Name: Texture (Mask)
-      Value: E
-    - Name: Texture (Bump)
+    - Name: Bump
       Value: B
-    - Name: Texture (Ambient Occlusion)
+    - Name: Light Map
+      Value: L
+    - Name: Flow Map
+      Value: FM
+    - Name: Height Map
+      Value: H
+    - Name: Ambient Occlusion
       Value: AO
-    - Name: Texture (Alpha/Opacity)
-      Value: A
-    - Name: Texture (Roughness)
-      Value: R
-    - Name: Texture (Normal)
+    - Name: Displacement
+      Value: DP
+    - Name: Normal
       Value: N
-    - Name: Texture (Diffuse/Albedo/Base Color
-      Value: D
+    - Name: Emmition
+      Value: EM
+    - Name: Metallic)
+      Value: SPR
+    - Name: Specular
+      Value: SP
+    - Name: Metallic+Roughness)
+      Value: MTR
+    - Name: Metallic)
+      Value: MT
+    - Name: Roughness)
+      Value: R
+    - Name: Opacity
+      Value: A
+    - Name: Albedo+Opacity
+      Value: RGBA
+    - Name: Albedo
+      Value: RGB
   - Name: Miscellaneous
     Category: Miscellaneous
     Description: 
