@@ -213,7 +213,6 @@ namespace XiRenameTool.Editor
             switch (chapter)
             {
                 case ETokenType.Name:
-                    EditorGUILayout.InspectorTitlebar(false, )
                     GUILayout.Label($"[{idx}] Name Tool:", EditorStyles.boldLabel);
                     EditorGUILayout.HelpBox("How should the file name change except for changing the prefix and suffix.", MessageType.None);
                     XiRename.RenameMode = (ERenameMode)EditorGUILayout.EnumPopup("Rename Action:", XiRename.RenameMode);
