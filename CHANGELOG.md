@@ -1,3 +1,10 @@
+## [1.0.6](https://github.com/hww/XiRename/compare/v1.0.5...v1.0.6) (2022-10-18)
+
+
+### Bug Fixes
+
+* **code:** Refactor settings ([d6493a5](https://github.com/hww/XiRename/commit/d6493a5a867ef5aad7bab6b78889242cc7c5d331))
+
 ## [1.0.5](https://github.com/hww/XiRename/compare/v1.0.4...v1.0.5) (2022-10-18)
 
 
