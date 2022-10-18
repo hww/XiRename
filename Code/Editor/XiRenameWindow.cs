@@ -21,52 +21,58 @@ namespace XiRenameTool.Editor
             EditorWindow.GetWindow(typeof(XiRenameWindow));
         }
 
-        public ReorderableList list = null;
+        public ReorderableList orderableList;
 
         /// <summary>Executes the 'selection changed' action.</summary>
         void OnSelectionChanged()
         {
-            ignoredFiles.Clear();
             selectedFiles.Clear();
             // Try to work out what folder we're clicking on. This code is from google.
             foreach (UnityEngine.Object obj in Selection.GetFiltered(typeof(UnityEngine.Object), SelectionMode.Assets))
             {
                 var item = new FileDescriptor(obj);
-                if (item.IsDirectory)
-                {
-                    ignoredFiles.Add(item);
-                }
-                else
-                {
-                    // to build the report
+                if (item.IsFile)
                     selectedFiles.Add(item);
-                }
             }
-
             this.Repaint();
         }
 
-        void OrderCallBack(Rect rect, int index, bool isActive, bool isFocused)
+        void OnRenderOrderableItem(Rect rect, int index, bool isActive, bool isFocused)
         {
             var item = selectedFiles[index];
             XiRename.ValidateName(item, XiRename.FileCategory);
-            rect.y += 2;
-            var rect2 = new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight);
-            if (!item.IsRenamable)
+            rect.y += 2; // to centrify text field
+            const int gapWidth = 4;
+            const int iconWidth = 16;
+            const int iconWidthAndGap = iconWidth + gapWidth;
+            var rWidth = rect.width * 0.5f;
+            var lWidth = rWidth - iconWidthAndGap - gapWidth;
+            var x = rect.x;
+            var rectI = new Rect(x, rect.y, iconWidth, EditorGUIUtility.singleLineHeight);
+            x += iconWidthAndGap;
+            var rectL = new Rect(x, rect.y, lWidth, EditorGUIUtility.singleLineHeight);
+            x += (lWidth + gapWidth);
+            var rectR = new Rect(x, rect.y, rWidth, EditorGUIUtility.singleLineHeight);
+
+            EditorGUILayout.BeginHorizontal();
+            if (item.IsRenamable)
             {
-                EditorGUI.BeginDisabledGroup(true);
-                EditorGUI.TextField(rect2, item.Name);
-                EditorGUI.EndDisabledGroup();
+                EditorGUI.DrawRect(rectI, item.IsValid ? Color.green : Color.red);
+                EditorGUI.LabelField(rectL, item.FileName);
+                item.ResultName = XiRename.GetString(item, item.Index, XiRename.FileCategory);
+                item.ResultName = EditorGUI.TextField(rectR, item.ResultName);
             }
             else
             {
-                item.ResultName = XiRename.GetString(item, item.Index, XiRename.FileCategory);
-                item.ResultName = EditorGUI.TextField(rect2, item.ResultName);
+                EditorGUI.DrawRect(rectI, Color.gray);
+                EditorGUI.LabelField(rectL, item.FileName);
+                EditorGUI.LabelField(rectR, string.Empty);
             }
+            EditorGUILayout.EndHorizontal();
         }
 
-        /// <summary>Executes the 'restrucure list' action.</summary>
-        void OnRestrucureList()
+        /// <summary>Executes the 'restrucure orderableList' action.</summary>
+        void OnBeforeRenderOrderableList()
         {
             var index = 0;
             foreach (var item in selectedFiles)
@@ -77,8 +83,6 @@ namespace XiRenameTool.Editor
             }
         }
 
-        /// <summary>The ignored files.</summary>
-        private List<FileDescriptor> ignoredFiles = new List<FileDescriptor>(100);
         /// <summary>The name items.</summary>
         private List<FileDescriptor> selectedFiles = new List<FileDescriptor>(100);
 
@@ -87,8 +91,9 @@ namespace XiRenameTool.Editor
         private void OnEnable()
         {
             banner = (Texture)Resources.Load("XiRename/T_Banner_Sprite", typeof(Texture));
-            list = new ReorderableList(selectedFiles, typeof(FileDescriptor));
-            list.drawElementCallback = OrderCallBack;
+            orderableList = new ReorderableList(selectedFiles, typeof(FileDescriptor));
+            orderableList.drawElementCallback = OnRenderOrderableItem;
+            orderableList.displayAdd = false;
             Selection.selectionChanged += OnSelectionChanged;
         }
 
@@ -128,8 +133,6 @@ namespace XiRenameTool.Editor
             // - Preview result 
             DrawUILine(uiLineColor);
             GUILayout.Label("Preview:", EditorStyles.boldLabel);
-            if (ignoredFiles.Count > 0)
-                EditorGUILayout.HelpBox($"Ignoted {ignoredFiles.Count} selected items.", MessageType.Info);
 
             if (selectedFiles.Count == 0)
             {
@@ -137,8 +140,8 @@ namespace XiRenameTool.Editor
             }
             else
             {
-                OnRestrucureList();
-                list?.DoLayoutList();
+                OnBeforeRenderOrderableList();
+                orderableList?.DoLayoutList();
             }
             // - - - - - - - - - - - - - - - - - -
             DrawUILine(uiLineColor);

@@ -163,7 +163,7 @@ namespace XiRenameTool
         public static string GetHint(int quantity, string ellipse = "...")
         {
             var separator = GetSeparator(targetConvention);
-            var name = MakeName("FileName", targetConvention);
+            var name = Utils.MakeName("FileName", targetConvention);
 
             var cnt = 0;
             var str = string.Empty;
@@ -230,12 +230,10 @@ namespace XiRenameTool
 
         public static string GetString(FileDescriptor item, int idx = 0, string category = null)
         {
-            item.Remove(XiRename.prefix.Mode, 0);
-            item.Remove(XiRename.variant.Mode, -2);
-            item.Remove(XiRename.suffix.Mode, 1);
+            item.UpdateName();
             var newName = string.Empty;
             if (renameMode == ERenameMode.Rename)
-                newName = MakeName(item.Name, XiRename.TargetConvention);
+                newName = Utils.MakeName(item.Name, XiRename.TargetConvention);
             else
                 newName = item.Name;
             return GetString(newName, idx);
@@ -256,38 +254,6 @@ namespace XiRenameTool
             return desc.ValidationStatus;
         }
 
-
-        ///--------------------------------------------------------------------
-        /// <summary>Makes a name.</summary>
-        ///
-        /// <exception cref="Exception">    Thrown when an exception error
-        ///                                 condition occurs.</exception>
-        ///
-        /// <param name="name">          The name.</param>
-        /// <param fileName="convention">The convention.</param>
-        ///
-        /// <returns>A string.</returns>
-        ///--------------------------------------------------------------------
-
-        public static string MakeName(string name, ENameConvention convention)
-        {
-            switch (convention)
-            {
-                case ENameConvention.PascalCase:
-                    return Utils.Camelize(name, true);
-                case ENameConvention.CamelCase:
-                    return Utils.Camelize(name, false);
-                case ENameConvention.LowercaseUnderscore:
-                    return Utils.Decamelize(name, '_');
-                case ENameConvention.LowercaseDash:
-                    return Utils.Decamelize(name, '-');
-                case ENameConvention.UppercaseUnderscore:
-                    return Utils.Decamelize(name, '_').ToUpper();
-                case ENameConvention.UppercaseDash:
-                    return Utils.Decamelize(name, '-').ToUpper();
-            }
-            throw new System.Exception("NotImplemented");
-        }
 
 
         ///--------------------------------------------------------------------
@@ -456,13 +422,14 @@ namespace XiRenameTool
         /// <summary>Target convention.</summary>
         private ENameConvention targetConvention = ENameConvention.PascalCase;
 
+        /// <summary>True if is modified, false if not.</summary>
         private bool isModified;
+        /// <summary>Executes the 'modify' action.</summary>
         private void OnModify()
         {
             XiRename.DoUpdateGUI = true;
             SavePreferences();
         }
-
 
         /// <summary>True if has counter, false if not.</summary>
         public bool WithCounter => type != ETokenType.Name;
@@ -773,7 +740,9 @@ namespace XiRenameTool
         public List<string> Tokens;
         /// <summary>Zero-based index of the.</summary>
         public int Index = 0;
- 
+        /// <summary>The mask.</summary>
+        private uint Mask = 0;
+
         ///--------------------------------------------------------------------
         /// <summary>Gets a value indicating whether this object is valid.</summary>
         ///
@@ -837,27 +806,6 @@ namespace XiRenameTool
             IsDirectory = attr.HasFlag(System.IO.FileAttributes.Directory);
         }
 
-        ///--------------------------------------------------------------------
-        /// <summary>Removes at described by idx.</summary>
-        ///
-        /// <param name="idx">Zero-based index of the.</param>
-        ///
-        /// <returns>True if it succeeds, false if it fails.</returns>
-        ///--------------------------------------------------------------------
-
-        public bool RemoveAt(int idx)
-        {
-            if (Tokens.Count <= 1)
-                return false;
-            if (idx < 0)
-                idx = Tokens.Count - idx;
-            if (idx < 0)
-                return false;
-            if (idx >= Tokens.Count)
-                return false;
-            Tokens.RemoveAt(idx);
-            return true;
-        }
 
         ///--------------------------------------------------------------------
         /// <summary>Gets the name.</summary>
@@ -865,7 +813,32 @@ namespace XiRenameTool
         /// <value>The name.</value>
         ///--------------------------------------------------------------------
 
-        public string Name => string.Join("_", Tokens);
+        public string Name => name;
+
+        private string name;
+
+        /// <summary>Updates the mask. Each bit equal (1) will remove one of Tokens</summary>
+        public void UpdateName()
+        {
+            Mask = 0;
+            UpdateMask_Bit(XiRename.prefix.Mode, 0);
+            UpdateMask_Bit(XiRename.variant.Mode, -2);
+            UpdateMask_Bit(XiRename.suffix.Mode, -1);
+            string str = string.Empty;
+            var bitMask = 1;
+            for (var i = 0; i < Tokens.Count; i++)
+            {
+                if ((bitMask & Mask) == 0)
+                {
+                    if (i != 0)
+                        str += $"_{Tokens[i]}";
+                    else
+                        str += Tokens[i];
+                }
+                bitMask <<= 1;
+            }
+            name = str;
+        }
 
         ///--------------------------------------------------------------------
         /// <summary>Removes this object.</summary>
@@ -876,55 +849,40 @@ namespace XiRenameTool
         /// <returns>True if it succeeds, false if it fails.</returns>
         ///--------------------------------------------------------------------
 
-        public bool Remove(ERenameAdvancedMode mode, int idx)
+        public void UpdateMask_Bit(ERenameAdvancedMode mode, int idx)
         {
             if (mode != ERenameAdvancedMode.Keep && mode != ERenameAdvancedMode.Add)
-                return RemoveAt(idx);
-            return true;
+                UpdateMask_Bit(idx);
+        }
+
+        ///--------------------------------------------------------------------
+        /// <summary>Make a bitfield for removing name items.</summary>
+        ///
+        /// <param name="idx">Zero-based index of the.</param>
+        ///
+        /// <returns>True if it succeeds, false if it fails.</returns>
+        ///--------------------------------------------------------------------
+
+        public void UpdateMask_Bit(int idx)
+        {
+            if (Tokens.Count <= 1)
+                return;
+            if (idx < 0)
+                idx = Tokens.Count + idx;
+            if (idx < 0)
+                return;
+            if (idx >= Tokens.Count)
+                return;
+            Mask |= (uint)1 << idx;
         }
     }
 
     /// <summary>An utilities.</summary>
     public static class Utils
     {
+ 
         ///--------------------------------------------------------------------
-        /// <summary>Minimum index.</summary>
-        ///
-        /// <param name="index1">The first index.</param>
-        /// <param name="index2">The second index.</param>
-        ///
-        /// <returns>An int.</returns>
-        ///--------------------------------------------------------------------
-
-        public static int MinIndex(int index1, int index2)
-        {
-            if (index1 < 0)
-                return index2;
-            if (index2 < 0)
-                return index1;
-            return index1 < index2 ? index1 : index2;
-        }
-
-        ///--------------------------------------------------------------------
-        /// <summary>Maximum index.</summary>
-        ///
-        /// <param name="index1">The first index.</param>
-        /// <param name="index2">The second index.</param>
-        ///
-        /// <returns>An int.</returns>
-        ///--------------------------------------------------------------------
-
-        public static int MaxIndex(int index1, int index2)
-        {
-            if (index1 < 0)
-                return index2;
-            if (index2 < 0)
-                return index1;
-            return index1 > index2 ? index1 : index2;
-        }
-
-        ///--------------------------------------------------------------------
-        /// <summary>Remove ' ', '-' or '_' to change forms:
+        /// <summary>UpdateMask_Bit ' ', '-' or '_' to change forms:
         ///   "foo-bar"  ->  "FooBar" "foo_bar"  ->  "FooBar" "foo bar"  ->
         ///   "FooBar".</summary>
         ///
@@ -1068,6 +1026,40 @@ namespace XiRenameTool
             }
             throw new System.Exception("NotImplemented");
         }
+
+
+        ///--------------------------------------------------------------------
+        /// <summary>Makes a name.</summary>
+        ///
+        /// <exception cref="Exception">    Thrown when an exception error
+        ///                                 condition occurs.</exception>
+        ///
+        /// <param name="name">          The name.</param>
+        /// <param fileName="convention">The convention.</param>
+        ///
+        /// <returns>A string.</returns>
+        ///--------------------------------------------------------------------
+
+        public static string MakeName(string name, ENameConvention convention)
+        {
+            switch (convention)
+            {
+                case ENameConvention.PascalCase:
+                    return Utils.Camelize(name, true);
+                case ENameConvention.CamelCase:
+                    return Utils.Camelize(name, false);
+                case ENameConvention.LowercaseUnderscore:
+                    return Utils.Decamelize(name, '_');
+                case ENameConvention.LowercaseDash:
+                    return Utils.Decamelize(name, '-');
+                case ENameConvention.UppercaseUnderscore:
+                    return Utils.Decamelize(name, '_').ToUpper();
+                case ENameConvention.UppercaseDash:
+                    return Utils.Decamelize(name, '-').ToUpper();
+            }
+            throw new System.Exception("NotImplemented");
+        }
+
 
     }
 }
