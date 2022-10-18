@@ -1,3 +1,10 @@
+## [1.0.9](https://github.com/hww/XiRename/compare/v1.0.8...v1.0.9) (2022-10-18)
+
+
+### Bug Fixes
+
+* **code:** Refactor ([b1d32aa](https://github.com/hww/XiRename/commit/b1d32aaf60dcc3d1e6599dc86d7a20b0d3bba2a2))
+
 ## [1.0.8](https://github.com/hww/XiRename/compare/v1.0.7...v1.0.8) (2022-10-18)
 
 
