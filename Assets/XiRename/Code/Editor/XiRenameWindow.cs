@@ -122,13 +122,13 @@ namespace XiRenameTool.Editor
             XiRename.FileCategoryIndex = EditorGUILayout.Popup("File Types:", XiRename.FileCategoryIndex, XiRename.FileCategoryOptions);
             // - - - - - - - - - - - - - - - - - -
             var fieldOrder = XiRename.FieldOrder;
-            foreach (var field in fieldOrder)
-                OnGUI_Chapter(field);
+            for (int i = 0; i < fieldOrder.Count; i++)
+                OnGUI_Chapter(fieldOrder[i], i);
             // - - - - - - - - - - - - - - - - - -
             DrawUILine(uiLineColor);
-            EditorGUI.BeginDisabledGroup(true);
-            EditorGUILayout.TextField("Hint:", XiRename.GetHint(3), EditorStyles.boldLabel);
-            EditorGUI.EndDisabledGroup();
+
+            EditorGUILayout.HelpBox(XiRename.GetHint(3), MessageType.Info);
+
             // - - - - - - - - - - - - - - - - - -
             // - Preview result 
             DrawUILine(uiLineColor);
@@ -207,24 +207,25 @@ namespace XiRenameTool.Editor
         /// <param name="chapter">The chapter.</param>
         ///--------------------------------------------------------------------
 
-        private static void OnGUI_Chapter(ETokenType chapter)
+        private static void OnGUI_Chapter(ETokenType chapter, int idx)
         {
             DrawUILine(uiLineColor);
             switch (chapter)
             {
                 case ETokenType.Name:
-                    GUILayout.Label("Name Tool:", EditorStyles.boldLabel);
+                    EditorGUILayout.InspectorTitlebar(false, )
+                    GUILayout.Label($"[{idx}] Name Tool:", EditorStyles.boldLabel);
                     EditorGUILayout.HelpBox("How should the file name change except for changing the prefix and suffix.", MessageType.None);
                     XiRename.RenameMode = (ERenameMode)EditorGUILayout.EnumPopup("Rename Action:", XiRename.RenameMode);
                     break;
                 case ETokenType.Prefix:
-                    OnGUI_Desinator("Prefix Tool", XiRename.prefix);
+                    OnGUI_Desinator($"[{idx}] Prefix Tool", XiRename.prefix);
                     break;
                 case ETokenType.Variant:
-                    OnGUI_Desinator("Variant Tool", XiRename.variant);
+                    OnGUI_Desinator($"[{idx}] Variant Tool", XiRename.variant);
                     break;
                 case ETokenType.Suffix:
-                    OnGUI_Desinator("Suffix Tool", XiRename.suffix);
+                    OnGUI_Desinator($"[{idx}] Suffix Tool", XiRename.suffix);
                     break;
 
             }

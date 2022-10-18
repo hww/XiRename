@@ -69,7 +69,7 @@ namespace XiRenameTool
         /// <value>The field order.</value>
         ///--------------------------------------------------------------------
 
-        public static List<ETokenType> FieldOrder => Settings.fieldOrder;
+        public static List<ETokenType> FieldOrder => Settings.nameTokensOrder;
 
         ///--------------------------------------------------------------------
         /// <summary>Searches for the first default asset filePath.</summary>
@@ -262,7 +262,7 @@ namespace XiRenameTool
         /// <value>Options that control the file category.</value>
         ///--------------------------------------------------------------------
 
-        public static string[] FileCategoryOptions => fileCategoryOptions ??= Settings.fileTypes.Select(o => o.Category).Distinct().ToArray();
+        public static string[] FileCategoryOptions => fileCategoryOptions ??= Settings.FileCategoryOptions;
 
         /// <summary>Options for controlling the file category.</summary>
         private static string[] fileCategoryOptions;
@@ -298,7 +298,7 @@ namespace XiRenameTool
         {
             prefix.Options.Clear();
             suffix.Options.Clear();
-            Settings.FindOptionsByCategory(FileCategory, prefix.Options, suffix.Options);
+            Settings.FindFileOptionsByCategory(FileCategory, prefix.Options, suffix.Options);
             prefix.OnChangeType();
             suffix.OnChangeType();
         }
@@ -367,7 +367,7 @@ namespace XiRenameTool
         private static void LoadPreferences()
         {
 #if UNITY_EDITOR
-            targetConvention = _settings.nameConvention;
+            targetConvention = _settings.namingConvention;
             renameMode = ERenameMode.Keep;
             prefix.Precision = Settings.prefixPrecision;
             suffix.Precision = Settings.suffixPrecision;
