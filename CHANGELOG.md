@@ -1,3 +1,10 @@
+## [1.0.5](https://github.com/hww/XiRename/compare/v1.0.4...v1.0.5) (2022-10-18)
+
+
+### Bug Fixes
+
+* **code:** Reactored name builder ([c219a75](https://github.com/hww/XiRename/commit/c219a7530c18fa1555adacaaa68bf36f97a66a92))
+
 ## [1.0.4](https://github.com/hww/XiRename/compare/v1.0.3...v1.0.4) (2022-10-17)
 
 
