@@ -28,12 +28,25 @@ namespace XiRenameTool.Editor
         {
             selectedFiles.Clear();
             // Try to work out what folder we're clicking on. This code is from google.
-            foreach (UnityEngine.Object obj in Selection.GetFiltered(typeof(UnityEngine.Object), SelectionMode.Assets))
+            foreach (var obj in Selection.GetFiltered(typeof(UnityEngine.Object), SelectionMode.Assets))
             {
                 var item = new FileDescriptor(obj);
                 if (item.IsFile)
                     selectedFiles.Add(item);
             }
+            if (selectedFiles.Count == 0)
+            {
+                foreach (var obj in Selection.gameObjects)
+                {
+                    var item = new FileDescriptor(obj);
+                    selectedFiles.Add(item);
+                }
+            }
+
+            orderableList = new ReorderableList(selectedFiles, typeof(FileDescriptor));
+            orderableList.drawElementCallback = OnRenderOrderableItem;
+            orderableList.displayAdd = false;
+            XiRename.DoUpdateGUI = true;
             this.Repaint();
         }
 
@@ -91,9 +104,6 @@ namespace XiRenameTool.Editor
         private void OnEnable()
         {
             banner = (Texture)Resources.Load("XiRename/T_Banner_Sprite", typeof(Texture));
-            orderableList = new ReorderableList(selectedFiles, typeof(FileDescriptor));
-            orderableList.drawElementCallback = OnRenderOrderableItem;
-            orderableList.displayAdd = false;
             Selection.selectionChanged += OnSelectionChanged;
         }
 
@@ -112,7 +122,7 @@ namespace XiRenameTool.Editor
         void OnGUI()
         {
             GUILayout.Box(banner);
-            DrawUILine(uiLineColor);
+            DrawUILine(uiLineColor, 2, 0);
             GUILayout.Label("Settings", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox("Choose one of the possible file naming conventions and file type.", MessageType.None);
             XiRename.TargetConvention = (ENameConvention)EditorGUILayout.EnumPopup("Target Convention:", XiRename.TargetConvention);
@@ -141,6 +151,20 @@ namespace XiRenameTool.Editor
                 OnBeforeRenderOrderableList();
                 orderableList?.DoLayoutList();
             }
+
+            GUILayout.BeginHorizontal();
+            EditorGUILayout.PrefixLabel("Legends:");
+            var h = EditorGUIUtility.singleLineHeight / 2;
+            const float size = 6; 
+            var legendValues = System.Enum.GetValues(typeof(EFileState));
+            foreach (var legend in legendValues)
+            {
+                Rect rect = EditorGUILayout.GetControlRect(GUILayout.Width(size), GUILayout.Height(size));
+                rect.y += h - size / 2;
+                EditorGUI.DrawRect(rect, FileDescriptor.GetStateColor((EFileState)legend));
+                GUILayout.Label(legend.ToString());
+            }
+            GUILayout.EndHorizontal();
             // - - - - - - - - - - - - - - - - - -
             DrawUILine(uiLineColor);
             GUILayout.BeginHorizontal();
@@ -156,7 +180,10 @@ namespace XiRenameTool.Editor
         {
             foreach (var item in selectedFiles)
             {
-                RenameAsset(item, dryRun);
+                if (item.IsFile)
+                    RenameAsset(item, dryRun);
+                else if (item.IsGameObject)
+                    item.Reference.name = item.ResultNameWithExtention;
             }
             selectedFiles.Clear();
             Selection.objects = new Object[0];
