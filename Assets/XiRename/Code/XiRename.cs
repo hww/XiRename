@@ -1,8 +1,10 @@
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using XiRenameTool.Utils;
 
 namespace XiRenameTool
 {
@@ -32,13 +34,18 @@ namespace XiRenameTool
         /// <summary>An enum constant representing the undefined type option.</summary>
         Undefined,
         /// <summary>An enum constant representing the ignore file option.</summary>
-        Ignore,
+        Ignored,
         /// <summary>An enum constant representing the invalid file cleanName option.</summary>
         Invalid,
         /// <summary>An enum constant representing the valid file cleanName option.</summary>
         Valid
     }
 
+    /// <summary>Values that represent file types.</summary>
+    public enum EFileType
+    {
+        Directory, File, GameObject
+    }
 
     /// <summary>An xi rename.</summary>
     public class XiRename : MonoBehaviour
@@ -171,7 +178,7 @@ namespace XiRenameTool
         public static string GetHint(int quantity, string ellipse = "...")
         {
             var separator = GetSeparator(targetConvention);
-            var name = Utils.MakeName("FileName", targetConvention);
+            var name = StringTools.MakeName("FileName", targetConvention);
 
             var cnt = 0;
             var str = string.Empty;
@@ -243,7 +250,7 @@ namespace XiRenameTool
             if (renameMode == ERenameMode.Rename)
             {
                 if (string.IsNullOrEmpty(renameTo))
-                    newName = Utils.MakeName(item.CleanName, XiRename.TargetConvention);
+                    newName = StringTools.MakeName(item.CleanName, XiRename.TargetConvention);
                 else
                     newName = renameTo;
             }
@@ -266,8 +273,6 @@ namespace XiRenameTool
             desc.State = Settings.ValidateName(desc, fileCategory);
             return desc.State;
         }
-
-
 
         ///--------------------------------------------------------------------
         /// <summary>Gets options for controlling the file types.</summary>
@@ -421,20 +426,20 @@ namespace XiRenameTool
         private ETokenType type;
         /// <summary>The suffix Mode.</summary>
         private ERenameAdvancedMode mode;
-        /// <summary>The cleanName prefix.</summary>
+        /// <summary>The name starts with.</summary>
         private string starts;
-        /// <summary>The cleanName suffix.</summary>
+        /// <summary>The name ends with.</summary>
         private string ends;
-        /// <summary>The suffix counter.</summary>
+        /// <summary>The counter.</summary>
         private int counter;
-        /// <summary>The suffix precision.</summary>
-        private int precision = 2;
-        /// <summary>The suffix delta.</summary>
+        /// <summary>The delta.</summary>
         private int delta = 1;
+        /// <summary>The precision.</summary>
+        private int precision = 2;
         /// <summary>True if has counter, false if not.</summary>
         private bool useCounter;
         /// <summary>The preference format.</summary>
-        string preferenceFormat;
+        private string preferenceFormat;
         /// <summary>Target convention.</summary>
         private ENameConvention targetConvention = ENameConvention.PascalCase;
 
@@ -667,7 +672,7 @@ namespace XiRenameTool
             {
                 if (value != prefixIndex)
                 {
-                    Starts = Utils.MakePrefix(Options[value].Value, targetConvention);
+                    Starts = StringTools.MakePrefix(Options[value].Value, targetConvention);
                     XiRename.DoUpdateGUI = true;
                 }
                 prefixIndex = value;
@@ -739,12 +744,11 @@ namespace XiRenameTool
 
     public class FileDescriptor
     {
+        public EFileType FileType;
         /// <summary>The reference to selected object.</summary>
         public UnityEngine.Object Reference;
         /// <summary>The validation status.</summary>
         public EFileState State;
-        /// <summary>True if is directory, false if not.</summary>
-        public bool IsDirectory;
         /// <summary>True if is temporary, false if not.</summary>
         public bool IsTemp;
         /// <summary>CleanName of the file path and the cleanName.</summary>
@@ -834,6 +838,8 @@ namespace XiRenameTool
         /// <summary>List of colors of the states.</summary>
         private static Color[] stateColors = new Color[4] { Color.yellow, Color.gray, Color.red, Color.green };
 
+        public static Color GetStateColor(EFileState state) { return stateColors[(int)state];  }
+
         ///--------------------------------------------------------------------
         /// <summary>Gets the color of the state.</summary>
         ///
@@ -866,7 +872,22 @@ namespace XiRenameTool
         /// <value>True if this object is renamable, false if not.</value>
         ///--------------------------------------------------------------------
 
-        public bool IsRenamable => State != EFileState.Ignore && State != EFileState.Undefined;
+        public bool IsRenamable
+        {
+            get
+            {
+                switch (FileType)
+                {
+                    case EFileType.Directory:
+                        return false;
+                    case EFileType.File:
+                        return (State != EFileState.Ignored && State != EFileState.Undefined);
+                    case EFileType.GameObject:
+                        return true;
+                }
+                return false;
+            }
+        }
 
         ///--------------------------------------------------------------------
         /// <summary>Gets a value indicating whether this object is file.</summary>
@@ -874,7 +895,16 @@ namespace XiRenameTool
         /// <value>True if this object is file, false if not.</value>
         ///--------------------------------------------------------------------
 
-        public bool IsFile => !IsDirectory;
+        public bool IsFile => FileType == EFileType.File;
+
+        ///--------------------------------------------------------------------
+        /// <summary>Gets a value indicating whether this object is
+        /// direcory.</summary>
+        ///
+        /// <value>True if this object is direcory, false if not.</value>
+        ///--------------------------------------------------------------------
+
+        public bool IsDirecory => FileType == EFileType.Directory;
 
         ///--------------------------------------------------------------------
         /// <summary>Gets the result cleanName with extention.</summary>
@@ -883,6 +913,15 @@ namespace XiRenameTool
         ///--------------------------------------------------------------------
 
         public string ResultNameWithExtention => $"{ResultOrCustomName}{FileExt}";
+
+        ///--------------------------------------------------------------------
+        /// <summary>Gets a value indicating whether this object is game
+        /// object.</summary>
+        ///
+        /// <value>True if this object is game object, false if not.</value>
+        ///--------------------------------------------------------------------
+
+        public bool IsGameObject => FileType == EFileType.GameObject;
 
         ///--------------------------------------------------------------------
         /// <summary>Constructor.</summary>
@@ -901,11 +940,25 @@ namespace XiRenameTool
             Tokens = FileName.Replace("  ", "_").Replace(" ", "_").Replace("-", "_").Split("_").ToList();
             IsTemp = (FileName.StartsWith("__"));
 
-            var attr = System.IO.File.GetAttributes(OriginalPath);
-            IsDirectory = attr.HasFlag(System.IO.FileAttributes.Directory);
+            if (System.IO.File.GetAttributes(OriginalPath).HasFlag(System.IO.FileAttributes.Directory))
+                FileType = EFileType.Directory;
+            else
+                FileType = EFileType.File;
         }
 
 
+        public FileDescriptor(GameObject obj)
+        {
+            Reference = obj;
+            OriginalPath = string.Empty;
+            DirectoryPath = string.Empty;
+            FileName = obj.name;
+            FileExt = string.Empty;
+            // TODO Make Regexp
+            Tokens = FileName.Replace("  ", "_").Replace(" ", "_").Replace("-", "_").Split("_").ToList();
+            IsTemp = (FileName.StartsWith("__"));
+            FileType = EFileType.GameObject;
+        }
 
 
         /// <summary>Updates the mask. Each bit equal (1) will remove one of Tokens</summary>
@@ -966,191 +1019,5 @@ namespace XiRenameTool
                 return;
             Mask |= (uint)1 << idx;
         }
-    }
-
-    /// <summary>An utilities.</summary>
-    public static class Utils
-    {
- 
-        ///--------------------------------------------------------------------
-        /// <summary>UpdateMask_Bit ' ', '-' or '_' to change forms:
-        ///   "foo-bar"  ->  "FooBar" "foo_bar"  ->  "FooBar" "foo bar"  ->
-        ///   "FooBar".</summary>
-        ///
-        /// <param cleanName="str">       .</param>
-        /// <param cleanName="capitalize">   (Optional) Should be capitalized
-        ///                             first character or not.</param>
-        ///
-        /// <returns>A string.</returns>
-        ///--------------------------------------------------------------------
-
-        public static string Camelize(string str, bool capitalize = true)
-        {
-            Debug.Assert(str != null);
-            var output = string.Empty;
-            for (var i = 0; i < str.Length; i++)
-            {
-                var c = str[i];
-                if (c == '-' || c == '_' || c == ' ')
-                {
-                    capitalize = true;
-                }
-                else
-                {
-                    if ((char.IsUpper(c) && i != 0) || capitalize)
-                    {
-                        output += char.ToUpper(c);
-                        capitalize = false;
-                    }
-                    else
-                    {
-                        output += char.ToLower(c);
-                    }
-                }
-            }
-            return output;
-        }
-
-        ///--------------------------------------------------------------------
-        /// <summary>Convert 'FooBar' to 'foo-bar'.</summary>
-        ///
-        /// <param cleanName="str">      .</param>
-        /// <param cleanName="separator">(Optional) The separator.</param>
-        ///
-        /// <returns>A string.</returns>
-        ///--------------------------------------------------------------------
-
-        public static string Decamelize(string str, char separator = '-')
-        {
-            Debug.Assert(str != null);
-            var output = string.Empty;
-            var small = false;
-            var space = false;
-            for (var i = 0; i < str.Length; i++)
-            {
-                var c = str[i];
-                if (char.IsUpper(c))
-                {
-                    if (small)
-                        output += separator;
-                    output += char.ToLower(c);
-                    small = false;
-                    space = false;
-                }
-                else if (c == ' ')
-                {
-                    small = true; // make - if next capital
-                    space = true; // make - if nex down
-                }
-                else
-                {
-                    if (space)
-                        output += separator;
-                    output += c;
-                    small = true; // make - if next capital
-                    space = false; // do not make - if next small
-                }
-            }
-            return output;
-        }
-
-        ///--------------------------------------------------------------------
-        /// <summary>Makes a prefix.</summary>
-        ///
-        /// <exception cref="Exception">    Thrown when an exception error
-        ///                                 condition occurs.</exception>
-        ///
-        /// <param cleanName="name">          The cleanName.</param>
-        /// <param fileName="convention">The convention.</param>
-        ///
-        /// <returns>A string.</returns>
-        ///--------------------------------------------------------------------
-
-        public static string MakePrefix(string name, ENameConvention convention)
-        {
-            switch (convention)
-            {
-                case ENameConvention.PascalCase:
-                    return Utils.Camelize(name, true);
-                case ENameConvention.CamelCase:
-                    return Utils.Camelize(name, false);
-                case ENameConvention.LowercaseUnderscore:
-                    return Utils.Decamelize(name, '_');
-                case ENameConvention.LowercaseDash:
-                    return Utils.Decamelize(name, '-');
-                case ENameConvention.UppercaseUnderscore:
-                    return Utils.Decamelize(name, '_').ToUpper();
-                case ENameConvention.UppercaseDash:
-                    return Utils.Decamelize(name, '-').ToUpper();
-            }
-            throw new System.Exception("NotImplemented");
-        }
-
-        ///--------------------------------------------------------------------
-        /// <summary>Makes a suffix.</summary>
-        ///
-        /// <exception cref="Exception">    Thrown when an exception error
-        ///                                 condition occurs.</exception>
-        ///
-        /// <param cleanName="name">          The cleanName.</param>
-        /// <param fileName="convention">The convention.</param>
-        ///
-        /// <returns>A string.</returns>
-        ///--------------------------------------------------------------------
-
-        public static string MakeSuffix(string name, ENameConvention convention)
-        {
-            switch (convention)
-            {
-                case ENameConvention.PascalCase:
-                    return Utils.Camelize(name, true);
-                case ENameConvention.CamelCase:
-                    return Utils.Camelize(name, false);
-                case ENameConvention.LowercaseUnderscore:
-                    return Utils.Decamelize(name, '_');
-                case ENameConvention.LowercaseDash:
-                    return Utils.Decamelize(name, '-');
-                case ENameConvention.UppercaseUnderscore:
-                    return Utils.Decamelize(name, '_').ToUpper();
-                case ENameConvention.UppercaseDash:
-                    return Utils.Decamelize(name, '-').ToUpper();
-            }
-            throw new System.Exception("NotImplemented");
-        }
-
-
-        ///--------------------------------------------------------------------
-        /// <summary>Makes a cleanName.</summary>
-        ///
-        /// <exception cref="Exception">    Thrown when an exception error
-        ///                                 condition occurs.</exception>
-        ///
-        /// <param cleanName="name">          The cleanName.</param>
-        /// <param fileName="convention">The convention.</param>
-        ///
-        /// <returns>A string.</returns>
-        ///--------------------------------------------------------------------
-
-        public static string MakeName(string name, ENameConvention convention)
-        {
-            switch (convention)
-            {
-                case ENameConvention.PascalCase:
-                    return Utils.Camelize(name, true);
-                case ENameConvention.CamelCase:
-                    return Utils.Camelize(name, false);
-                case ENameConvention.LowercaseUnderscore:
-                    return Utils.Decamelize(name, '_');
-                case ENameConvention.LowercaseDash:
-                    return Utils.Decamelize(name, '-');
-                case ENameConvention.UppercaseUnderscore:
-                    return Utils.Decamelize(name, '_').ToUpper();
-                case ENameConvention.UppercaseDash:
-                    return Utils.Decamelize(name, '-').ToUpper();
-            }
-            throw new System.Exception("NotImplemented");
-        }
-
-
     }
 }
