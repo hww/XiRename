@@ -1,3 +1,10 @@
+## [1.0.11](https://github.com/hww/XiRename/compare/v1.0.10...v1.0.11) (2022-10-19)
+
+
+### Bug Fixes
+
+* **code:** Added renaming of GameObjects ([88550d0](https://github.com/hww/XiRename/commit/88550d04ada6e941538e3f0818f0ca1d5054602d))
+
 ## [1.0.10](https://github.com/hww/XiRename/compare/v1.0.9...v1.0.10) (2022-10-18)
 
 
