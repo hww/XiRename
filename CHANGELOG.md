@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/hww/XiRename/compare/v1.1.0...v1.1.1) (2022-10-20)
+
+
+### Bug Fixes
+
+* **code:** Format of extentions changed to ; separated ([41bd3ea](https://github.com/hww/XiRename/commit/41bd3ea190f6043ae613a54b71fd22bc65fd1ae1))
+
 # [1.1.0](https://github.com/hww/XiRename/compare/v1.0.11...v1.1.0) (2022-10-20)
 
 
