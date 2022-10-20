@@ -20,15 +20,14 @@ namespace XiRenameTool
 
         public static void Log(string prefix, string message)
         {
-            if (logFileName == null)
-            {
-                var dir = $"{Application.streamingAssetsPath}/XiRename";
-                System.IO.Directory.CreateDirectory(dir);
-                logFileName = $"{dir}/XiRename.txt";
-            }
-
             if (WriteLog)
             {
+                if (logFileName == null)
+                {
+                    var dir = $"{Application.streamingAssetsPath}/XiRename";
+                    System.IO.Directory.CreateDirectory(dir);
+                    logFileName = $"{dir}/XiRename.txt";
+                }
                 try
                 {
                     System.IO.File.AppendAllText(LogFileName, $"{TimeStamp.GetStamp()} : [{prefix}] : {UserName}@{MachineName} : {message}\n");
