@@ -709,7 +709,7 @@ namespace XiRenameTool
         /// <summary>Executes the 'change type' action.</summary>
         public void OnChangeType()
         {
-            Starts = PrefixOptions.Length == 0 ? String.Empty : PrefixOptions[0];
+            Starts = PrefixOptions.Length == 0 ? String.Empty : Options[0].Value;
             Ends = String.Empty;
             prefixIndex = 0;
             SavePreferences();

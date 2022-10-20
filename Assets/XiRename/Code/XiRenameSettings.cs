@@ -96,7 +96,8 @@ namespace XiRenameTool
                         return result;
                 }
             }
-            return categories != 0 ? EFileState.Invalid : EFileState.Undefined;
+            // Ignore all files without math category
+            return categories != 0 ? EFileState.Ignored : EFileState.Undefined;
         }
 
         ///--------------------------------------------------------------------
@@ -227,7 +228,7 @@ namespace XiRenameTool
 
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-            var type = Define("Scenes/Defaults", ".unity, .scene, .scenetemplate");
+            var type = Define("Scenes/Defaults", ".unity;.scene;.scenetemplate");
             type.DefinePreffix("Scene", "MAP");
             type.DefineSuffix("Persistent", "P", true);
             type.DefineSuffix("Audio", "Audio");
@@ -238,7 +239,7 @@ namespace XiRenameTool
 
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-            type = Define("Models/FBX", ".fbx, .ma, .mb");
+            type = Define("Models/FBX", ".fbx;.ma;.mb");
             type.DefinePreffix("Characters", "CH");
             type.DefinePreffix("Vehicles", "VH");
             type.DefinePreffix("Weapons", "WP");
@@ -255,7 +256,7 @@ namespace XiRenameTool
 
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-            type = Define("Animations/Defaults", ".fbx, .ma, .mb");
+            type = Define("Animations/Defaults", ".fbx;.ma;.mb");
             type.DefinePreffix("Animation Clip", "A");
             type.DefinePreffix("Animation Controller", "AC");
             type.DefinePreffix("Avatar Mask", "AM");
@@ -286,12 +287,12 @@ namespace XiRenameTool
             
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-            type = Define("Materials/Defaults", ".mat, .cubemaps");
+            type = Define("Materials/Defaults", ".mat;.cubemaps");
             type.DefinePreffix("Material", "M");
 
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-            type = Define("Textures/Defaults", ".tga, .bmp, .jpg, .png, .gif, .psd");
+            type = Define("Textures/Defaults", ".tga;.bmp;.jpg;.png;.gif;.psd");
             type.DefinePreffix("Texture", "T", true);
             type.DefinePreffix("Media Texture", "MT");
             type.DefinePreffix("Render Target", "RT");
@@ -315,8 +316,8 @@ namespace XiRenameTool
             type.DefineSuffix("Light Map", "L");
             type.DefineSuffix("Bump", "B");
             type.DefineSuffix("Mask", "M");
-            type.DefineSuffix("Specular/Gloss/AO", "SGAO");
-            type.DefineSuffix("Roughness/Metalic/AO", "RMAO");
+            type.DefineSuffix("Specular+Gloss+AO", "SGAO");
+            type.DefineSuffix("Roughness+Metalic+AO", "RMAO");
 
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
             
@@ -326,12 +327,12 @@ namespace XiRenameTool
             
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
             
-            type = Define("Physics/Defaults", ".physicMaterial, .physicsMaterial2D");
+            type = Define("Physics/Defaults", ".physicMaterial;.physicsMaterial2D");
             type.DefinePreffix("Physical Material", "PM");
             
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
             
-            type = Define("Audio/Defaults", ".mp3, .wav");
+            type = Define("Audio/Defaults", ".mp3;.wav");
             type.DefinePreffix("Audio (Class)", "");
             type.DefinePreffix("Audio (Clip)", "A");
             type.DefinePreffix("Audio (Mixer)", "AM");
@@ -352,12 +353,12 @@ namespace XiRenameTool
             
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
             
-            type = Define("Shaders/Defaults", ".compute, .raytrace, .shadervariants, .shader");
+            type = Define("Shaders/Defaults", ".compute;.raytrace;.shadervariants;.shader");
             type.DefinePreffix("Shader", "SH");
             
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
             
-            type = Define("Fonts/Defaults", ".ttf, .otf");
+            type = Define("Fonts/Defaults", ".ttf;.otf");
             type.DefinePreffix("F", "F");
             
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -452,10 +453,9 @@ namespace XiRenameTool
             
                 if (_extentionRegexArray == null)
                 {
-                    var str = extentions.Replace(" ", "");
                     try
                     {
-                        _extentionRegexArray = str.Split(",").Select(o => new WildcardPattern(o)).ToArray();
+                        _extentionRegexArray = extentions.Split(";").Select(o => new WildcardPattern(o)).ToArray();
                     }
                     catch (System.Exception ex)
                     {
@@ -466,13 +466,13 @@ namespace XiRenameTool
             }
         }
 
-    ///--------------------------------------------------------------------
-    /// <summary>Gets the prefixes.</summary>
-    ///
-    /// <value>The prefixes.</value>
-    ///--------------------------------------------------------------------
+        ///--------------------------------------------------------------------
+        /// <summary>Gets the prefixes.</summary>
+        ///
+        /// <value>The prefixes.</value>
+        ///--------------------------------------------------------------------
 
-    public List<StringPair> Prefixes => prefixes;
+        public List<StringPair> Prefixes => prefixes;
 
         ///--------------------------------------------------------------------
         /// <summary>Gets the suffixes.</summary>
@@ -639,6 +639,7 @@ namespace XiRenameTool
         
         public void OnValidate()
         {
+            extentions = extentions.Replace(" ", "").Replace(",", ";");
             _extentionRegexArray = null; 
         }
     }

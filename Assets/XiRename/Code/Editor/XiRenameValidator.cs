@@ -1,5 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -17,6 +19,7 @@ namespace XiRenameTool.Editor
                 switch (item.Type)
                 {
                     case ERenamableType.Directory:
+                        ValidateItemsInFolder(item.OriginalPath);
                         break;
                     case ERenamableType.File:
                         ValidateItem(item);
@@ -26,6 +29,26 @@ namespace XiRenameTool.Editor
                 }
             }
 
+
+        }
+        public static void ValidateItemsInFolder(string folderPath)
+        {
+            var objects = GetAssetList<UnityEngine.Object>(folderPath);
+            foreach (var obj in objects)
+            {
+                var item = new RenamableObject(obj);
+                switch (item.Type)
+                {
+                    case ERenamableType.Directory:
+                        ValidateItemsInFolder(item.OriginalPath);
+                        break;
+                    case ERenamableType.File:
+                        ValidateItem(item);
+                        break;
+                    case ERenamableType.GameObject:
+                        break;
+                }
+            }
 
         }
 
@@ -45,6 +68,20 @@ namespace XiRenameTool.Editor
                 case EFileState.Valid:
                     break;
             }
+        }
+
+        public static List<T> GetAssetList<T>(string path) where T : class
+        {
+            string[] fileEntries = Directory.GetFiles(path);
+
+            return fileEntries.Select(fileName =>
+            {
+                string assetPath = fileName.Substring(fileName.IndexOf("Assets"));
+                assetPath = Path.ChangeExtension(assetPath, null);
+                return UnityEditor.AssetDatabase.LoadAssetAtPath(assetPath, typeof(T));
+            })
+                .OfType<T>()
+                .ToList();
         }
     }
 }
