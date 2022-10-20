@@ -1,21 +1,26 @@
+
 using NaughtyAttributes;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using XiCore.StringTools;
+using XiRenameTool.Utils;
 
 namespace XiRenameTool
 {
     /// <summary>Values that represent category conventions.</summary>
     public enum ENameConvention { PascalCase, CamelCase, LowercaseUnderscore, LowercaseDash, UppercaseUnderscore, UppercaseDash }
 
+    /// <summary>Values that represent token types.</summary>
     public enum ETokenType { Prefix, Name, Suffix, Variant };
 
     /// <summary>An xi rename settings.</summary>
     [CreateAssetMenu(fileName = "XiRenameSettings", menuName = "Xi/Settins/XiRenameSettings", order = 0)]
     public class XiRenameSettings : ScriptableObject
     {
+        /// <summary>True to write log.</summary>
+        public bool WriteLog;
         /// <summary>The cleanName tokens order.</summary>
         public List<ETokenType> nameTokensOrder = new List<ETokenType>();
 
@@ -25,85 +30,117 @@ namespace XiRenameTool
         public int prefixPrecision = 2;
         /// <summary>The suffix default precision.</summary>
         public int suffixPrecision = 2;
-        /// <summary>Full pathname of the ignore file.</summary>
+        /// <summary>Full pathname of the ignore item.</summary>
         public string[] ignorePath;
 
-        /// <summary>List of file types.</summary>
+        /// <summary>List of item types.</summary>
         public List<FileType> fileTypes = new List<FileType>();
 
         ///--------------------------------------------------------------------
-        /// <summary>Gets options for controlling the file category.</summary>
+        /// <summary>Gets options for controlling the item category.</summary>
         ///
-        /// <value>Options that control the file category.</value>
+        /// <value>Options that control the item category.</value>
         ///--------------------------------------------------------------------
 
-        public string[] FileCategoryOptions => fileCategoryOptions ??= fileTypes.Select(o => o.Category).Distinct().ToArray();
+        public string[] FileCategoryOptions => _fileCategoryOptions ??= fileTypes.Select(o => o.Category).Distinct().ToArray();
 
-        /// <summary>Options for controlling the file category.</summary>
-        private string[] fileCategoryOptions;
+        /// <summary>Options for controlling the item category.</summary>
+        private string[] _fileCategoryOptions;
 
         ///--------------------------------------------------------------------
         /// <summary>Query if 'filePath' is ignored.</summary>
         ///
-        /// <param cleanName="filePath">Full pathname of the file.</param>
+        /// <param cleanName="filePath">Full pathname of the item.</param>
         ///
         /// <returns>True if ignored, false if not.</returns>
         ///--------------------------------------------------------------------
 
         public bool IsIgnored(string filePath)
         {
-            foreach (var ignore in ignorePath)
+            if (_ignorePathRegexArray == null)
+                _ignorePathRegexArray = ignorePath.Select(o => new WildcardPattern(o)).ToArray();
+            foreach (var ignore in _ignorePathRegexArray)
             {
-                if (filePath.Contains(ignore))
+                if (ignore.IsMatch(filePath))
                     return true;
             }
             return false;
         }
 
+        WildcardPattern[] _ignorePathRegexArray;
+
         ///--------------------------------------------------------------------
         /// <summary>Validates the cleanName for simgle category.</summary>
         ///
-        /// <param cleanName="file">        The file descriptor.</param>
-        /// <param cleanName="fileCategory">Category the file belongs to.</param>
+        /// <param cleanName="item">        The item descriptor.</param>
+        /// <param cleanName="category">    Category the item belongs to.</param>
         ///
         /// <returns>An EFileState.</returns>
         ///--------------------------------------------------------------------
 
-        public EFileState ValidateName(FileDescriptor file, string fileCategory)
+        public EFileState ValidateName(RenamableObject item, string category)
         {
-            if (!file.IsValid)
+            if (!item.IsValid)
                 return EFileState.Invalid;
-            if (file.IsFile && IsIgnored(file.DirectoryPath))
+            if (item.IsFile && IsIgnored(item.DirectoryPath))
                 return EFileState.Ignored;
             var result = EFileState.Invalid;
             var categories = 0;
             foreach (var type in fileTypes)
             {
-                if (type.Category == fileCategory)
+                if (type.Category == category)
                 {
                     categories++;
-                    result = type.ValidateName(file);
+                    result = type.ValidateName(item);
                     if (result == EFileState.Valid)
                         return result;
                 }
             }
-            return categories != 0 ? result : EFileState.Undefined;
+            return categories != 0 ? EFileState.Invalid : EFileState.Undefined;
+        }
+
+        ///--------------------------------------------------------------------
+        /// <summary>Automatic validate name.</summary>
+        ///
+        /// <param cleanName="item">The item descriptor.</param>
+        ///
+        /// <returns>An EFileState.</returns>
+        ///--------------------------------------------------------------------
+
+        public EFileState AutoValidateName(RenamableObject item)
+        {
+            if (!item.IsValid)
+                return EFileState.Invalid;
+            if (item.IsFile && IsIgnored(item.DirectoryPath))
+                return EFileState.Ignored;
+            var result = EFileState.Invalid;
+            var categories = 0;
+            foreach (var type in fileTypes)
+            {
+                result = type.ValidateName(item);
+                if (result == EFileState.Valid)
+                    return result;
+                if (result != EFileState.Undefined)
+                    categories++;
+            }
+            return categories != 0 ? EFileState.Invalid : EFileState.Undefined;
         }
 
         ///--------------------------------------------------------------------
         /// <summary>Searches for the first match.</summary>
         ///
         /// <param cleanName="path">        The cleanName.</param>
-        /// <param cleanName="displayError"> (Optional) True to display error.</param>
+        /// <param cleanName="displayError">    (Optional) True to display
+        ///                                     error.</param>
         ///
-        /// <returns>A FileType.</returns>
+        /// <returns>A Type.</returns>
         ///--------------------------------------------------------------------
 
         public FileType FindFileTypeByName(string name, bool displayError = false)
         {
             var result = fileTypes.Find(o => o.Path == name);
             if (displayError && result == null)
-                Debug.LogError($"Can't find file type '{name}'", this);
+                Debug.LogError($"Can't find item type '{name}'", this);
             return result;
         }
 
@@ -111,7 +148,8 @@ namespace XiRenameTool
         /// <summary>Searches for the first category.</summary>
         ///
         /// <param cleanName="category">    The category.</param>
-        /// <param cleanName="displayError"> (Optional) True to display error.</param>
+        /// <param cleanName="displayError">    (Optional) True to display
+        ///                                     error.</param>
         ///
         /// <returns>The found category.</returns>
         ///--------------------------------------------------------------------
@@ -120,7 +158,7 @@ namespace XiRenameTool
         {
             var result = fileTypes.FindAll(o => o.Category == category).ToList();
             if (displayError && result.Count == 0)
-                Debug.LogError($"Can't find file type '{category}'", this);
+                Debug.LogError($"Can't find item type '{category}'", this);
             return result;
         }
 
@@ -157,7 +195,8 @@ namespace XiRenameTool
 
         public void OnValidate()
         {
-            fileCategoryOptions = null;
+            _fileCategoryOptions = null;
+            _ignorePathRegexArray = null;
             foreach (FileType type in fileTypes)
                 type.OnValidate();
         }
@@ -174,6 +213,11 @@ namespace XiRenameTool
             nameTokensOrder.Add(ETokenType.Variant);
             nameTokensOrder.Add(ETokenType.Suffix);
 
+            
+            ignorePath = new string[] { 
+                "*/External", "*/Plugins", "*/Standart Assets" 
+            };
+
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
             // Taken from https://github.com/justinwasilenko/Unity-Style-Guide
             // But modified for my needs
@@ -183,7 +227,7 @@ namespace XiRenameTool
 
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-            var type = Define("Scenes/Default", ".unity, .scene, .scenetemplate");
+            var type = Define("Scenes/Defaults", ".unity, .scene, .scenetemplate");
             type.DefinePreffix("Scene", "MAP");
             type.DefineSuffix("Persistent", "P", true);
             type.DefineSuffix("Audio", "Audio");
@@ -205,13 +249,13 @@ namespace XiRenameTool
 
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-            type = Define("Models/MAX", "Models", ".max");
-            type.DefineSuffix("MAX Mesh LOD", "_mesh_lod0*");
+            type = Define("Models/MAX", ".max");
+            type.DefineSuffix("MAX Mesh LOD", "mesh_lod0*");
             type.DefineSuffix("MAX Mesh Collider", "collider");
 
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-            type = Define("Animations", null, ".fbx, .ma, .mb");
+            type = Define("Animations/Defaults", ".fbx, .ma, .mb");
             type.DefinePreffix("Animation Clip", "A");
             type.DefinePreffix("Animation Controller", "AC");
             type.DefinePreffix("Avatar Mask", "AM");
@@ -219,7 +263,7 @@ namespace XiRenameTool
 
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-            type = Define("AI/Defaults", "Assets", ".asset");
+            type = Define("AI/Defaults", ".asset");
             type.DefinePreffix("AI Controller", "AIC");
             type.DefinePreffix("Behavior Tree", "BT");
             type.DefinePreffix("Blackboard", "BB");
@@ -276,18 +320,18 @@ namespace XiRenameTool
 
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
             
-            type = Define("Miscellaneous/Defaults", null, ".asset");
+            type = Define("Miscellaneous/Defaults", ".asset");
             type.DefinePreffix("Universal Render Pipeline Asset", "URP");
             type.DefinePreffix("Post Process Volume Profile", "PP");
             
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
             
-            type = Define("Physics/Defaults", null, ".physicMaterial, .physicsMaterial2D");
+            type = Define("Physics/Defaults", ".physicMaterial, .physicsMaterial2D");
             type.DefinePreffix("Physical Material", "PM");
             
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
             
-            type = Define("Audio/Defaults", null, ".mp3, .wav");
+            type = Define("Audio/Defaults", ".mp3, .wav");
             type.DefinePreffix("Audio (Class)", "");
             type.DefinePreffix("Audio (Clip)", "A");
             type.DefinePreffix("Audio (Mixer)", "AM");
@@ -295,7 +339,7 @@ namespace XiRenameTool
             
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
             
-            type = Define("UI/Defaults", null, ".asset");
+            type = Define("UI/Defaults", ".asset");
             type.DefinePreffix("UI (Interface)", "UI");
             type.DefinePreffix("UI (Font)", "Font");
             type.DefinePreffix("UI (Sprite)", "T");
@@ -303,7 +347,7 @@ namespace XiRenameTool
             
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
             
-            type = Define("Effects/Defaults", "Prefabs", ".prefab");
+            type = Define("Effects/Defaults", ".prefab");
             type.DefinePreffix("FX (Particle System)", "PS");
             
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -313,7 +357,7 @@ namespace XiRenameTool
             
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
             
-            type = Define("Fonts/Defaults", "Fonts", ".ttf, .otf");
+            type = Define("Fonts/Defaults", ".ttf, .otf");
             type.DefinePreffix("F", "F");
             
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -323,12 +367,13 @@ namespace XiRenameTool
         ///--------------------------------------------------------------------
         /// <summary>Defines.</summary>
         ///
-        /// <param cleanName="path">       The cleanName.</param>
-        /// <param cleanName="category">   The category.</param>
-        /// <param cleanName="extentions"> The extentions.</param>
-        /// <param cleanName="description">(Optional) The description.</param>
+        /// <param cleanName="path">      The cleanName.</param>
+        /// <param cleanName="category">  The category.</param>
+        /// <param cleanName="extentions">(Optional) The extentions.</param>
         ///
-        /// <returns>A FileType.</returns>
+        /// <returns>A Type.</returns>
+        ///
+        /// ### <param cleanName="description"> (Optional) The description.</param>
         ///--------------------------------------------------------------------
 
         public FileType Define(string path, string extentions, string description = null)
@@ -336,7 +381,7 @@ namespace XiRenameTool
             var type = FindFileTypeByName(path, false);
             if (type == null)
             {
-                type = new FileType(path, extentions);
+                type = new FileType(path, extentions, description);
                 fileTypes.Add(type);
             }
             return type;
@@ -354,12 +399,12 @@ namespace XiRenameTool
         /// <summary>Default constructor.</summary>
         public StringPair() { }
 
-        ///------------------------------------------------------------------------
+        ///--------------------------------------------------------------------
         /// <summary>Constructor.</summary>
         ///
-        /// <param category="category"> The category.</param>
-        /// <param category="counter">The counter.</param>
-        ///------------------------------------------------------------------------
+        /// <param category="category">The category.</param>
+        /// <param category="counter"> The counter.</param>
+        ///--------------------------------------------------------------------
 
         public StringPair(string name, string value)
         {
@@ -368,19 +413,19 @@ namespace XiRenameTool
         }
     }
 
-    /// <summary>A single file type.</summary>
+    /// <summary>A single item type.</summary>
     [System.Serializable]
     public class FileType
     {
-        /// <summary>The file type category.</summary>
+        /// <summary>The item type category.</summary>
         public string Path;
-        /// <summary>The file type category.</summary>
+        /// <summary>The item type category.</summary>
         public string Category;
-        /// <summary>The file type subcategory.</summary>
+        /// <summary>The item type subcategory.</summary>
         public string Subcategory;
-        /// <summary>The file type description.</summary>
+        /// <summary>The item type description.</summary>
         public string Description;
-        /// <summary>The list of possible file extentions.</summary>
+        /// <summary>The list of possible item extentions.</summary>
         [TextArea]
         [SerializeField]
         private string extentions;
@@ -392,10 +437,49 @@ namespace XiRenameTool
         private List<StringPair> suffixes = new List<StringPair>();
 
         /// <summary>The cached extentions array.</summary>
-        private string[] _cachedExtentions;
+        private WildcardPattern[] _extentionRegexArray;
 
-        public string[] Extentions => _cachedExtentions ??= extentions.Replace(" ", "").Split(",");
-        public List<StringPair> Prefixes => prefixes;
+        ///--------------------------------------------------------------------
+        /// <summary>Gets the extentions.</summary>
+        ///
+        /// <value>The extentions.</value>
+        ///--------------------------------------------------------------------
+
+        public WildcardPattern[] ExtentionRegexArray
+        {
+            get
+            {
+            
+                if (_extentionRegexArray == null)
+                {
+                    var str = extentions.Replace(" ", "");
+                    try
+                    {
+                        _extentionRegexArray = str.Split(",").Select(o => new WildcardPattern(o)).ToArray();
+                    }
+                    catch (System.Exception ex)
+                    {
+                        throw new System.Exception($"File type {Path} has bad extentiuons list '{extentions}' : {ex.Message}");
+                    }
+                }
+                return _extentionRegexArray;
+            }
+        }
+
+    ///--------------------------------------------------------------------
+    /// <summary>Gets the prefixes.</summary>
+    ///
+    /// <value>The prefixes.</value>
+    ///--------------------------------------------------------------------
+
+    public List<StringPair> Prefixes => prefixes;
+
+        ///--------------------------------------------------------------------
+        /// <summary>Gets the suffixes.</summary>
+        ///
+        /// <value>The suffixes.</value>
+        ///--------------------------------------------------------------------
+
         public List<StringPair> Suffixes => suffixes;
 
         /// <summary>Default constructor.</summary>
@@ -404,14 +488,18 @@ namespace XiRenameTool
 
         }
 
-        ///------------------------------------------------------------------------
+        ///--------------------------------------------------------------------
         /// <summary>Constructor.</summary>
         ///
-        /// <param category="category">   The file type category.</param>
-        /// <param category="category">   The category is equal to cleanName or different.</param>
-        /// <param category="extentions">  The list of possible file extentions.</param>
-        /// <param category="description"> (Optional) The file type description.</param>
-        ///------------------------------------------------------------------------
+        /// <param category="category">  The item type category.</param>
+        /// <param category="category">     The category is equal to
+        ///                                 cleanName or different.</param>
+        /// <param category="extentions">   (Optional) The list of possible
+        ///                                 item extentions.</param>
+        ///
+        /// ### <param category="description">  (Optional) The item type
+        ///                                     description.</param>
+        ///--------------------------------------------------------------------
 
         public FileType(string path, string extentions, string description = null)
         {
@@ -425,24 +513,38 @@ namespace XiRenameTool
             this.extentions = extentions;
         }
 
-        ///------------------------------------------------------------------------
+        ///--------------------------------------------------------------------
         /// <summary>Verify the extention is belongs of this type.</summary>
         ///
         /// <param category="fileExtention">The extention.</param>
         ///
         /// <returns>True if it succeeds, false if it fails.</returns>
-        ///------------------------------------------------------------------------
+        ///--------------------------------------------------------------------
 
         public bool VerifyExtention(string fileExtention)
         {
-            return System.Array.IndexOf<string>(Extentions, fileExtention) >= 0;
+            var regexs = ExtentionRegexArray;
+            foreach (var item in regexs)
+            {
+                if (item.IsMatch(fileExtention))
+                    return true;
+            }
+            return false;
         }
 
-        public EFileState ValidateName(FileDescriptor desc)
+        ///--------------------------------------------------------------------
+        /// <summary>Validates the name described by item.</summary>
+        ///
+        /// <param name="item">The item.</param>
+        ///
+        /// <returns>An EFileState.</returns>
+        ///--------------------------------------------------------------------
+
+        public EFileState ValidateName(RenamableObject item)
         {
-            if (!VerifyExtention(desc.FileExt))
+            if (!VerifyExtention(item.FileExt))
                 return EFileState.Undefined;
-            if (desc.Tokens.Count == 1)
+            if (item.Tokens.Count == 1)
             {
                 // The cleanName does not have preffix or suffix
                 // It should be allowed by the empty value 
@@ -454,7 +556,7 @@ namespace XiRenameTool
             {
                 int prefixes = 0;
                 int suffixes = 0;
-                foreach (var token in desc.Tokens)
+                foreach (var token in item.Tokens)
                 {
                     var prefix = FindPrefix(token);
                     var suffix = FindSuffix(token);
@@ -468,15 +570,13 @@ namespace XiRenameTool
 
         }
 
-        ///------------------------------------------------------------------------
+        ///--------------------------------------------------------------------
         /// <summary>Searches for the first category.</summary>
         ///
         /// <param category="prefix">File category.</param>
         ///
         /// <returns>The found category or null.</returns>
-        ///
-        /// ### <param category="fileExtention">The extention.</param>
-        ///------------------------------------------------------------------------
+        ///--------------------------------------------------------------------
 
         public string FindPrefix(string prefix)
         {
@@ -484,13 +584,13 @@ namespace XiRenameTool
             return idx >= 0 ? Prefixes[idx].Value : null;
         }
 
-        ///------------------------------------------------------------------------
+        ///--------------------------------------------------------------------
         /// <summary>Searches for the first category.</summary>
         ///
         /// <param category="suffix">File category.</param>
         ///
         /// <returns>The found category or null.</returns>
-        ///------------------------------------------------------------------------
+        ///--------------------------------------------------------------------
 
         public string FindSuffix(string suffix)
         {
@@ -501,9 +601,10 @@ namespace XiRenameTool
         ///--------------------------------------------------------------------
         /// <summary>Define preffix.</summary>
         ///
-        /// <param category="category">The file type category.</param>
-        /// <param cleanName="prefix">      The preffix string.</param>
-        /// <param cleanName="priority">    (Optional) True to make it hi priority.</param>
+        /// <param category="category"> The item type category.</param>
+        /// <param cleanName="prefix">  The preffix string.</param>
+        /// <param cleanName="priority">    (Optional) True to make it hi
+        ///                                 priority.</param>
         ///--------------------------------------------------------------------
 
         public void DefinePreffix(string name, string prefix, bool priority = true)
@@ -517,9 +618,10 @@ namespace XiRenameTool
         ///--------------------------------------------------------------------
         /// <summary>Define suffix.</summary>
         ///
-        /// <param category="category">The file type category.</param>
-        /// <param cleanName="prefix">      The suffix string.</param>
-        /// <param cleanName="priority">    (Optional) True to make it hi priority.</param>
+        /// <param category="category"> The item type category.</param>
+        /// <param cleanName="prefix">  The suffix string.</param>
+        /// <param cleanName="priority">    (Optional) True to make it hi
+        ///                                 priority.</param>
         ///--------------------------------------------------------------------
 
         public void DefineSuffix(string name, string prefix, bool priority = true)
@@ -530,14 +632,14 @@ namespace XiRenameTool
                 Suffixes.Add(new StringPair(name, prefix));
         }
 
-        ///------------------------------------------------------------------------
-        /// <summary>Called when the script is loaded or a counter is changed in the
-        /// inspector (Called in the editor only)</summary>
-        ///------------------------------------------------------------------------
+        ///--------------------------------------------------------------------
+        /// <summary>Called when the script is loaded or a counter is changed
+        /// in the inspector (Called in the editor only)</summary>
+        ///--------------------------------------------------------------------
         
         public void OnValidate()
         {
-            _cachedExtentions = null; 
+            _extentionRegexArray = null; 
         }
     }
 

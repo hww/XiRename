@@ -13,7 +13,7 @@ namespace XiRenameTool.Editor
     {
         private static Texture banner;
 
-        [MenuItem("Xi/XiRename")]
+        [MenuItem("Xi/XiRename/Rename Tool...")]
 
         /// <summary>Shows the window.</summary>
         public static void ShowWindow()
@@ -30,7 +30,7 @@ namespace XiRenameTool.Editor
             // Try to work out what folder we're clicking on. This code is from google.
             foreach (var obj in Selection.GetFiltered(typeof(UnityEngine.Object), SelectionMode.Assets))
             {
-                var item = new FileDescriptor(obj);
+                var item = new RenamableObject(obj);
                 if (item.IsFile)
                     selectedFiles.Add(item);
             }
@@ -38,34 +38,43 @@ namespace XiRenameTool.Editor
             {
                 foreach (var obj in Selection.gameObjects)
                 {
-                    var item = new FileDescriptor(obj);
+                    var item = new RenamableObject(obj);
                     selectedFiles.Add(item);
                 }
             }
 
-            orderableList = new ReorderableList(selectedFiles, typeof(FileDescriptor));
+            orderableList = new ReorderableList(selectedFiles, typeof(RenamableObject));
             orderableList.drawElementCallback = OnRenderOrderableItem;
             orderableList.displayAdd = false;
             XiRename.DoUpdateGUI = true;
             this.Repaint();
         }
 
+        ///--------------------------------------------------------------------
+        /// <summary>Executes the 'render orderable item' action.</summary>
+        ///
+        /// <param name="rect">     The rectangle.</param>
+        /// <param name="index">    Zero-based index of the.</param>
+        /// <param name="isActive"> True if is active, false if not.</param>
+        /// <param name="isFocused">True if is focused, false if not.</param>
+        ///--------------------------------------------------------------------
+
         void OnRenderOrderableItem(Rect rect, int index, bool isActive, bool isFocused)
         {
             var item = selectedFiles[index];
             XiRename.ValidateName(item, XiRename.FileCategory);
-            rect.y += 2; // to centrify text field
+            rect.y += 2; // FIXME to centrify text field need +2 WTF?
             const int gapWidth = 4;
-            const int iconWidth = 4;
-            const int iconWidthAndGap = iconWidth + gapWidth;
-            var rWidth = rect.width * 0.5f;
-            var lWidth = rWidth - iconWidthAndGap - gapWidth;
+            const int imgWidth = 4;
+            const int imgWidthAndGap = imgWidth + gapWidth;
+            var col2Width = rect.width * 0.5f;
+            var col1Width = col2Width - imgWidthAndGap - gapWidth;
             var x = rect.x;
-            var rectI = new Rect(x, rect.y, iconWidth, EditorGUIUtility.singleLineHeight);
-            x += iconWidthAndGap;
-            var rectL = new Rect(x, rect.y, lWidth, EditorGUIUtility.singleLineHeight);
-            x += (lWidth + gapWidth);
-            var rectR = new Rect(x, rect.y, rWidth, EditorGUIUtility.singleLineHeight);
+            var rectI = new Rect(x, rect.y, imgWidth, EditorGUIUtility.singleLineHeight);
+            x += imgWidthAndGap;
+            var rectL = new Rect(x, rect.y, col1Width, EditorGUIUtility.singleLineHeight);
+            x += (col1Width + gapWidth);
+            var rectR = new Rect(x, rect.y, col2Width, EditorGUIUtility.singleLineHeight);
 
             EditorGUILayout.BeginHorizontal();
             EditorGUI.DrawRect(rectI, item.StateColor);
@@ -97,7 +106,7 @@ namespace XiRenameTool.Editor
         }
 
         /// <summary>The name items.</summary>
-        private List<FileDescriptor> selectedFiles = new List<FileDescriptor>(100);
+        private List<RenamableObject> selectedFiles = new List<RenamableObject>(100);
 
 
         /// <summary>Called when the object becomes enabled and active.</summary>
@@ -161,13 +170,15 @@ namespace XiRenameTool.Editor
             {
                 Rect rect = EditorGUILayout.GetControlRect(GUILayout.Width(size), GUILayout.Height(size));
                 rect.y += h - size / 2;
-                EditorGUI.DrawRect(rect, FileDescriptor.GetStateColor((EFileState)legend));
+                EditorGUI.DrawRect(rect, RenamableObject.GetStateColor((EFileState)legend));
                 GUILayout.Label(legend.ToString());
             }
             GUILayout.EndHorizontal();
             // - - - - - - - - - - - - - - - - - -
             DrawUILine(uiLineColor);
             GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Validate Selection"))
+                XiRenameValidator.ValidateSelectetItems();
             if (GUILayout.Button("Rename All"))
                 RenameAllFiles(false);
             GUILayout.EndHorizontal();
@@ -183,14 +194,20 @@ namespace XiRenameTool.Editor
                 if (item.IsFile)
                     RenameAsset(item, dryRun);
                 else if (item.IsGameObject)
-                    item.Reference.name = item.ResultNameWithExtention;
+                {
+                    var go = item.Reference as GameObject;
+                    var oldName = go.name;
+                    var newName = item.ResultNameWithExtention;
+                    XiRenameLogger.Log("rename", $"'Scene/{go.scene.name}/{oldName}' -> '{newName}'");
+                    go.name = newName;
+                }
             }
             selectedFiles.Clear();
             Selection.objects = new Object[0];
         }
 
 
-        private void RenameAsset(FileDescriptor item, bool dryRun)
+        private void RenameAsset(RenamableObject item, bool dryRun)
         {
             if (!item.IsRenamable)
                 return;
