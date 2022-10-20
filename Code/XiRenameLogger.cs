@@ -7,24 +7,34 @@ namespace XiRenameTool
 {
     public static class XiRenameLogger 
     {
+        public static bool WriteLog;
         public static string UserName => Environment.UserName;
-        public static string MachineName => Environment.MachineName;
-        private static string logFileName;
+        public static string MachineName => Environment.MachineName;       
         public static string LogFileName => logFileName;
+
+        private static string logFileName;
+        
         static XiRenameLogger()
         {
-            var dir = $"{Application.streamingAssetsPath}/XiRename";
-            System.IO.Directory.CreateDirectory(dir);
-            logFileName = $"{dir}/XiRename.log";
         }
 
         public static void Log(string prefix, string message)
         {
-            try
+            if (logFileName == null)
             {
-                System.IO.File.AppendAllText(LogFileName, $"{TimeStamp.GetStamp()} : [{prefix}] : {UserName}@{MachineName} : {message}\n");
+                var dir = $"{Application.streamingAssetsPath}/XiRename";
+                System.IO.Directory.CreateDirectory(dir);
+                logFileName = $"{dir}/XiRename.txt";
             }
-            catch { }
+
+            if (WriteLog)
+            {
+                try
+                {
+                    System.IO.File.AppendAllText(LogFileName, $"{TimeStamp.GetStamp()} : [{prefix}] : {UserName}@{MachineName} : {message}\n");
+                }
+                catch { }
+            }
         }
 
         /// <summary>

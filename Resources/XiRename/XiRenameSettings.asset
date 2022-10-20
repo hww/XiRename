@@ -12,16 +12,38 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b6091002058581f45a90415dd14a32b2, type: 3}
   m_Name: XiRenameSettings
   m_EditorClassIdentifier: 
+  WriteLog: 0
   nameTokensOrder: 00000000010000000300000002000000
   namingConvention: 0
   prefixPrecision: 2
   suffixPrecision: 2
   ignorePath:
-  - Art/External
-  - Design/External
+  - '*/External'
+  - '*/Plugins'
+  - '*/Standart Assets'
   fileTypes:
-  - Name: Models/FBX
+  - Path: Scenes/Defaults
+    Category: Scenes
+    Subcategory: Defaults
+    Description: 
+    extentions: .unity, .scene, .scenetemplate
+    prefixes:
+    - Name: Scene
+      Value: MAP
+    suffixes:
+    - Name: Gameplay
+      Value: Gameplay
+    - Name: Geometry
+      Value: Geo
+    - Name: Lighting
+      Value: Lighting
+    - Name: Audio
+      Value: Audio
+    - Name: Persistent
+      Value: P
+  - Path: Models/FBX
     Category: Models
+    Subcategory: FBX
     Description: 
     extentions: .fbx, .ma, .mb
     prefixes:
@@ -40,8 +62,9 @@ MonoBehaviour:
     - Name: Characters
       Value: CH
     suffixes: []
-  - Name: Models/MAX
+  - Path: Models/MAX
     Category: Models
+    Subcategory: MAX
     Description: 
     extentions: .max
     prefixes: []
@@ -49,9 +72,10 @@ MonoBehaviour:
     - Name: MAX Mesh Collider
       Value: collider
     - Name: MAX Mesh LOD
-      Value: _mesh_lod0*
-  - Name: Animations
+      Value: mesh_lod0*
+  - Path: Animations/Defaults
     Category: Animations
+    Subcategory: Defaults
     Description: 
     extentions: .fbx, .ma, .mb
     prefixes:
@@ -64,8 +88,9 @@ MonoBehaviour:
     - Name: Animation Clip
       Value: A
     suffixes: []
-  - Name: Artificial Intelligence
-    Category: Assets
+  - Path: AI/Defaults
+    Category: AI
+    Subcategory: Defaults
     Description: 
     extentions: .asset
     prefixes:
@@ -88,24 +113,36 @@ MonoBehaviour:
     suffixes:
     - Name: EnvQueryContext
       Value: Context
-  - Name: Other Assets
-    Category: Assets
+  - Path: Other Assets/Defaults
+    Category: Other Assets
+    Subcategory: Defaults
     Description: 
     extentions: .asset
     prefixes:
     - Name: Scriptable Object
       Value: SO
     suffixes: []
-  - Name: Prefabs
+  - Path: Prefabs/Defaults
     Category: Prefabs
+    Subcategory: Defaults
     Description: 
     extentions: .prefab
     prefixes:
     - Name: Prefab
       Value: P
     suffixes: []
-  - Name: Textures
+  - Path: Materials/Defaults
+    Category: Materials
+    Subcategory: Defaults
+    Description: 
+    extentions: .mat, .cubemaps
+    prefixes:
+    - Name: Material
+      Value: M
+    suffixes: []
+  - Path: Textures/Defaults
     Category: Textures
+    Subcategory: Defaults
     Description: 
     extentions: .tga, .bmp, .jpg, .png, .gif, .psd
     prefixes:
@@ -122,8 +159,10 @@ MonoBehaviour:
     - Name: Texture
       Value: T
     suffixes:
-    - Name: Texture (Packed)
-      Value: '?'
+    - Name: Roughness/Metalic/AO
+      Value: RMAO
+    - Name: Specular/Gloss/AO
+      Value: SGAO
     - Name: Mask
       Value: M
     - Name: Bump
@@ -141,25 +180,24 @@ MonoBehaviour:
     - Name: Normal
       Value: N
     - Name: Emmition
-      Value: EM
-    - Name: Metallic)
-      Value: SPR
+      Value: E
     - Name: Specular
       Value: SP
-    - Name: Metallic+Roughness)
+    - Name: Metallic+Roughness
       Value: MTR
-    - Name: Metallic)
+    - Name: Metallic
       Value: MT
-    - Name: Roughness)
+    - Name: Roughness
       Value: R
     - Name: Opacity
       Value: A
     - Name: Albedo+Opacity
-      Value: RGBA
+      Value: DA
     - Name: Albedo
-      Value: RGB
-  - Name: Miscellaneous
+      Value: D
+  - Path: Miscellaneous/Defaults
     Category: Miscellaneous
+    Subcategory: Defaults
     Description: 
     extentions: .asset
     prefixes:
@@ -168,16 +206,18 @@ MonoBehaviour:
     - Name: Universal Render Pipeline Asset
       Value: URP
     suffixes: []
-  - Name: Physics
+  - Path: Physics/Defaults
     Category: Physics
+    Subcategory: Defaults
     Description: 
     extentions: .physicMaterial, .physicsMaterial2D
     prefixes:
     - Name: Physical Material
       Value: PM
     suffixes: []
-  - Name: Audio
+  - Path: Audio/Defaults
     Category: Audio
+    Subcategory: Defaults
     Description: 
     extentions: .mp3, .wav
     prefixes:
@@ -190,8 +230,9 @@ MonoBehaviour:
     - Name: Audio (Class)
       Value: 
     suffixes: []
-  - Name: User Interface
-    Category: User Interface
+  - Path: UI/Defaults
+    Category: UI
+    Subcategory: Defaults
     Description: 
     extentions: .asset
     prefixes:
@@ -204,35 +245,30 @@ MonoBehaviour:
     suffixes:
     - Name: UI (Sprite)
       Value: GUI
-  - Name: Effects
-    Category: Prefabs
+  - Path: Effects/Defaults
+    Category: Effects
+    Subcategory: Defaults
     Description: 
     extentions: .prefab
     prefixes:
     - Name: FX (Particle System)
       Value: PS
     suffixes: []
-  - Name: Shaders
+  - Path: Shaders/Defaults
     Category: Shaders
+    Subcategory: Defaults
     Description: 
     extentions: .compute, .raytrace, .shadervariants, .shader
     prefixes:
     - Name: Shader
       Value: SH
     suffixes: []
-  - Name: Fonts
+  - Path: Fonts/Defaults
     Category: Fonts
+    Subcategory: Defaults
     Description: 
     extentions: .ttf, .otf
     prefixes:
     - Name: F
-      Value: F
-    suffixes: []
-  - Name: Scenes
-    Category: Schemes
-    Description: 
-    extentions: .scene, .scenetemplate
-    prefixes:
-    - Name: S
       Value: F
     suffixes: []

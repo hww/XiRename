@@ -107,9 +107,9 @@ namespace XiRenameTool.Utils
             switch (convention)
             {
                 case ENameConvention.PascalCase:
-                    return StringTools.Camelize(name, true);
+                    return name.ToUpper();
                 case ENameConvention.CamelCase:
-                    return StringTools.Camelize(name, false);
+                    return name.ToUpper();
                 case ENameConvention.LowercaseUnderscore:
                     return StringTools.Decamelize(name, '_');
                 case ENameConvention.LowercaseDash:
@@ -139,7 +139,7 @@ namespace XiRenameTool.Utils
             switch (convention)
             {
                 case ENameConvention.PascalCase:
-                    return StringTools.Camelize(name, true);
+                    return name; //< because settings are in the pascal case
                 case ENameConvention.CamelCase:
                     return StringTools.Camelize(name, false);
                 case ENameConvention.LowercaseUnderscore:

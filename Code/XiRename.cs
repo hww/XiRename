@@ -42,7 +42,7 @@ namespace XiRenameTool
     }
 
     /// <summary>Values that represent file types.</summary>
-    public enum EFileType
+    public enum ERenamableType
     {
         Directory, File, GameObject
     }
@@ -67,6 +67,7 @@ namespace XiRenameTool
         static XiRename()
         {
             _settings = FindDefaultAssetPath(false);
+            XiRenameLogger.WriteLog = _settings.WriteLog;
             LoadPreferences();
         }
 
@@ -243,7 +244,7 @@ namespace XiRenameTool
         /// <returns>The string.</returns>
         ///--------------------------------------------------------------------
 
-        public static string GetString(FileDescriptor item, int idx = 0, string category = null)
+        public static string GetString(RenamableObject item, int idx = 0, string category = null)
         {
             item.UpdateName();
             var newName = string.Empty;
@@ -262,16 +263,30 @@ namespace XiRenameTool
         ///--------------------------------------------------------------------
         /// <summary>Validates the cleanName described by filePath.</summary>
         ///
-        /// <param cleanName="desc">        Full pathname of the file.</param>
-        /// <param cleanName="fileCategory">Category the file belongs to.</param>
+        /// <param cleanName="item">        Full pathname of the file.</param>
+        /// <param cleanName="category">Category the file belongs to.</param>
         ///
         /// <returns>True if it succeeds, false if it fails.</returns>
         ///--------------------------------------------------------------------
 
-        public static EFileState ValidateName(FileDescriptor desc, string fileCategory)
+        public static EFileState ValidateName(RenamableObject item, string category)
         {
-            desc.State = Settings.ValidateName(desc, fileCategory);
-            return desc.State;
+            item.State = Settings.ValidateName(item, category);
+            return item.State;
+        }
+
+        ///--------------------------------------------------------------------
+        /// <summary>Automatic validate name.</summary>
+        ///
+        /// <param cleanName="item">Full pathname of the file.</param>
+        ///
+        /// <returns>An EFileState.</returns>
+        ///--------------------------------------------------------------------
+
+        public static EFileState AutoValidateName(RenamableObject item)
+        {
+            item.State = Settings.AutoValidateName(item);
+            return item.State;
         }
 
         ///--------------------------------------------------------------------
@@ -287,6 +302,12 @@ namespace XiRenameTool
 
         /// <summary>Zero-based index of the file type.</summary>
         private static int fileCategoryIndex;
+
+        ///--------------------------------------------------------------------
+        /// <summary>Gets the category the file belongs to.</summary>
+        ///
+        /// <value>The file category.</value>
+        ///--------------------------------------------------------------------
 
         public static string FileCategory => FileCategoryOptions[fileCategoryIndex];
 
@@ -443,8 +464,6 @@ namespace XiRenameTool
         /// <summary>Target convention.</summary>
         private ENameConvention targetConvention = ENameConvention.PascalCase;
 
-        /// <summary>True if is modified, false if not.</summary>
-        private bool isModified;
         /// <summary>Executes the 'modify' action.</summary>
         private void OnModify()
         {
@@ -690,6 +709,8 @@ namespace XiRenameTool
         /// <summary>Executes the 'change type' action.</summary>
         public void OnChangeType()
         {
+            Starts = PrefixOptions.Length == 0 ? String.Empty : PrefixOptions[0];
+            Ends = String.Empty;
             prefixIndex = 0;
             SavePreferences();
         }
@@ -740,11 +761,11 @@ namespace XiRenameTool
     ///------------------------------------------------------------------------
     /// <summary>A file descriptor is a caching structure for storing the file
     /// cleanName path and tokens.</summary>
-    ///------------------------------------------------------------------------
+    ///----------- -------------------------------------------------------------
 
-    public class FileDescriptor
+    public class RenamableObject
     {
-        public EFileType FileType;
+        public ERenamableType Type;
         /// <summary>The reference to selected object.</summary>
         public UnityEngine.Object Reference;
         /// <summary>The validation status.</summary>
@@ -876,13 +897,13 @@ namespace XiRenameTool
         {
             get
             {
-                switch (FileType)
+                switch (Type)
                 {
-                    case EFileType.Directory:
+                    case ERenamableType.Directory:
                         return false;
-                    case EFileType.File:
+                    case ERenamableType.File:
                         return (State != EFileState.Ignored && State != EFileState.Undefined);
-                    case EFileType.GameObject:
+                    case ERenamableType.GameObject:
                         return true;
                 }
                 return false;
@@ -895,7 +916,7 @@ namespace XiRenameTool
         /// <value>True if this object is file, false if not.</value>
         ///--------------------------------------------------------------------
 
-        public bool IsFile => FileType == EFileType.File;
+        public bool IsFile => Type == ERenamableType.File;
 
         ///--------------------------------------------------------------------
         /// <summary>Gets a value indicating whether this object is
@@ -904,7 +925,7 @@ namespace XiRenameTool
         /// <value>True if this object is direcory, false if not.</value>
         ///--------------------------------------------------------------------
 
-        public bool IsDirecory => FileType == EFileType.Directory;
+        public bool IsDirecory => Type == ERenamableType.Directory;
 
         ///--------------------------------------------------------------------
         /// <summary>Gets the result cleanName with extention.</summary>
@@ -921,7 +942,7 @@ namespace XiRenameTool
         /// <value>True if this object is game object, false if not.</value>
         ///--------------------------------------------------------------------
 
-        public bool IsGameObject => FileType == EFileType.GameObject;
+        public bool IsGameObject => Type == ERenamableType.GameObject;
 
         ///--------------------------------------------------------------------
         /// <summary>Constructor.</summary>
@@ -929,7 +950,7 @@ namespace XiRenameTool
         /// <param cleanName="path">Full pathname of the file.</param>
         ///--------------------------------------------------------------------
 
-        public FileDescriptor(UnityEngine.Object obj)
+        public RenamableObject(UnityEngine.Object obj)
         {
             Reference = obj;
             OriginalPath =AssetDatabase.GetAssetPath(obj); 
@@ -941,13 +962,13 @@ namespace XiRenameTool
             IsTemp = (FileName.StartsWith("__"));
 
             if (System.IO.File.GetAttributes(OriginalPath).HasFlag(System.IO.FileAttributes.Directory))
-                FileType = EFileType.Directory;
+                Type = ERenamableType.Directory;
             else
-                FileType = EFileType.File;
+                Type = ERenamableType.File;
         }
 
 
-        public FileDescriptor(GameObject obj)
+        public RenamableObject(GameObject obj)
         {
             Reference = obj;
             OriginalPath = string.Empty;
@@ -957,7 +978,7 @@ namespace XiRenameTool
             // TODO Make Regexp
             Tokens = FileName.Replace("  ", "_").Replace(" ", "_").Replace("-", "_").Split("_").ToList();
             IsTemp = (FileName.StartsWith("__"));
-            FileType = EFileType.GameObject;
+            Type = ERenamableType.GameObject;
         }
 
 
