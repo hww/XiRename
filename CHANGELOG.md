@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/hww/XiRename/compare/v1.0.11...v1.1.0) (2022-10-20)
+
+
+### Features
+
+* **code:** The wildcards support added ([c369d53](https://github.com/hww/XiRename/commit/c369d534c004441e62f8f2e44289da17bfee81c1))
+
 ## [1.0.11](https://github.com/hww/XiRename/compare/v1.0.10...v1.0.11) (2022-10-19)
 
 
