@@ -26,7 +26,7 @@ MonoBehaviour:
     Category: Scenes
     Subcategory: Defaults
     Description: 
-    extentions: .unity, .scene, .scenetemplate
+    extentions: .unity;.scene;.scenetemplate
     prefixes:
     - Name: Scene
       Value: MAP
@@ -45,7 +45,7 @@ MonoBehaviour:
     Category: Models
     Subcategory: FBX
     Description: 
-    extentions: .fbx, .ma, .mb
+    extentions: .fbx;.ma;.mb
     prefixes:
     - Name: Rig
       Value: RIG
@@ -77,7 +77,7 @@ MonoBehaviour:
     Category: Animations
     Subcategory: Defaults
     Description: 
-    extentions: .fbx, .ma, .mb
+    extentions: .fbx;.ma;.mb
     prefixes:
     - Name: Morph Target
       Value: MT
@@ -135,7 +135,7 @@ MonoBehaviour:
     Category: Materials
     Subcategory: Defaults
     Description: 
-    extentions: .mat, .cubemaps
+    extentions: .mat;.cubemaps
     prefixes:
     - Name: Material
       Value: M
@@ -144,7 +144,7 @@ MonoBehaviour:
     Category: Textures
     Subcategory: Defaults
     Description: 
-    extentions: .tga, .bmp, .jpg, .png, .gif, .psd
+    extentions: .tga;.bmp;.jpg;.png;.gif;.psd
     prefixes:
     - Name: Light Profile
       Value: TLP
@@ -159,9 +159,9 @@ MonoBehaviour:
     - Name: Texture
       Value: T
     suffixes:
-    - Name: Roughness/Metalic/AO
+    - Name: Roughness+Metalic+AO
       Value: RMAO
-    - Name: Specular/Gloss/AO
+    - Name: Specular+Gloss+AO
       Value: SGAO
     - Name: Mask
       Value: M
@@ -210,7 +210,7 @@ MonoBehaviour:
     Category: Physics
     Subcategory: Defaults
     Description: 
-    extentions: .physicMaterial, .physicsMaterial2D
+    extentions: .physicMaterial;.physicsMaterial2D
     prefixes:
     - Name: Physical Material
       Value: PM
@@ -219,7 +219,7 @@ MonoBehaviour:
     Category: Audio
     Subcategory: Defaults
     Description: 
-    extentions: .mp3, .wav
+    extentions: .mp3;.wav
     prefixes:
     - Name: Audio (Voice)
       Value: AV
@@ -258,7 +258,7 @@ MonoBehaviour:
     Category: Shaders
     Subcategory: Defaults
     Description: 
-    extentions: .compute, .raytrace, .shadervariants, .shader
+    extentions: .compute;.raytrace;.shadervariants;.shader
     prefixes:
     - Name: Shader
       Value: SH
@@ -267,8 +267,15 @@ MonoBehaviour:
     Category: Fonts
     Subcategory: Defaults
     Description: 
-    extentions: .ttf, .otf
+    extentions: .ttf;.otf
     prefixes:
     - Name: F
       Value: F
+    suffixes: []
+  - Path: GameObjects/Defaults
+    Category: GameObjects
+    Subcategory: Defaults
+    Description: 
+    extentions: .*
+    prefixes: []
     suffixes: []
