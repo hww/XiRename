@@ -5,6 +5,7 @@ using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
 using XiRenameTool;
+using XiRenameTool.Utils;
 
 namespace XiRenameTool.Editor
 {
@@ -42,6 +43,7 @@ namespace XiRenameTool.Editor
                     selectedFiles.Add(item);
                 }
             }
+            selectedFiles.Sort(SortingTools.AlphanumCompare);
 
             orderableList = new ReorderableList(selectedFiles, typeof(RenamableObject));
             orderableList.drawElementCallback = OnRenderOrderableItem;
@@ -62,7 +64,8 @@ namespace XiRenameTool.Editor
         void OnRenderOrderableItem(Rect rect, int index, bool isActive, bool isFocused)
         {
             var item = selectedFiles[index];
-            XiRename.ValidateName(item, XiRename.FileCategory);
+            if (!XiRename.MakeUnique)
+                XiRename.ValidateName(item, XiRename.FileCategory);
             rect.y += 2; // FIXME to centrify text field need +2 WTF?
             const int gapWidth = 4;
             const int imgWidth = 4;
@@ -80,7 +83,6 @@ namespace XiRenameTool.Editor
             EditorGUI.DrawRect(rectI, item.StateColor);
             if (item.IsRenamable)
             {
-
                 EditorGUI.LabelField(rectL, item.FileName);
                 item.ResultName = XiRename.GetString(item, item.Index, XiRename.FileCategory);
                 item.ResultOrCustomName = EditorGUI.TextField(rectR, item.ResultOrCustomName);
@@ -96,12 +98,22 @@ namespace XiRenameTool.Editor
         /// <summary>Executes the 'restrucure orderableList' action.</summary>
         void OnBeforeRenderOrderableList()
         {
-            var index = 0;
-            foreach (var item in selectedFiles)
+            if (XiRename.MakeUnique)
             {
-                XiRename.ValidateName(item, XiRename.FileCategory);
-                if (item.IsRenamable)
-                    item.Index = index++;
+                foreach (var item in selectedFiles)
+                {
+                    XiRename.ValidateIgnorance(item);
+                }
+            }
+            else
+            {
+                var index = 0;
+                foreach (var item in selectedFiles)
+                {
+                    XiRename.ValidateName(item, XiRename.FileCategory);
+                    if (item.IsRenamable)
+                        item.Index = index++;
+                }
             }
         }
 
@@ -135,14 +147,22 @@ namespace XiRenameTool.Editor
             GUILayout.Label("Settings", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox("Choose one of the possible file naming conventions and file type.", MessageType.None);
             XiRename.TargetConvention = (ENameConvention)EditorGUILayout.EnumPopup("Target Convention:", XiRename.TargetConvention);
-            XiRename.FileCategoryIndex = EditorGUILayout.Popup("File Types:", XiRename.FileCategoryIndex, XiRename.FileCategoryOptions);
-            // - - - - - - - - - - - - - - - - - -
-            var fieldOrder = XiRename.FieldOrder;
-            for (int i = 0; i < fieldOrder.Count; i++)
-                OnGUI_Chapter(fieldOrder[i], i);
+            XiRename.MakeUnique = EditorGUILayout.Toggle("Make Unique:", XiRename.MakeUnique);
+            if (XiRename.MakeUnique)
+            {
+                XiRename.AddNumberToZero = EditorGUILayout.Toggle("Number To All:", XiRename.AddNumberToZero);
+            }
+            else
+            {
+                XiRename.FileCategoryIndex = EditorGUILayout.Popup("File Types:", XiRename.FileCategoryIndex, XiRename.FileCategoryOptions);
+                // - - - - - - - - - - - - - - - - - -
+                var fieldOrder = XiRename.FieldOrder;
+                for (int i = 0; i < fieldOrder.Count; i++)
+                    OnGUI_Chapter(fieldOrder[i], i);
+            }
+
             // - - - - - - - - - - - - - - - - - -
             DrawUILine(uiLineColor);
-
             EditorGUILayout.HelpBox(XiRename.GetHint(3), MessageType.Info);
 
             // - - - - - - - - - - - - - - - - - -
@@ -184,6 +204,10 @@ namespace XiRenameTool.Editor
             GUILayout.EndHorizontal();
             if (XiRename.DoUpdateGUI)
             {
+                if (XiRename.MakeUnique)
+                {
+                    UniqueRenamableTool.MakeUniqueName(selectedFiles, XiRename.suffix.Format, XiRename.AddNumberToZero);
+                }
                 XiRename.DoUpdateGUI = false;
             }
         }
@@ -247,7 +271,7 @@ namespace XiRenameTool.Editor
                     EditorGUILayout.HelpBox("How should the file name change except for changing the prefix and suffix.", MessageType.None);
                     XiRename.RenameMode = (ERenameMode)EditorGUILayout.EnumPopup("Rename Action:", XiRename.RenameMode);
                     if (XiRename.renameMode != ERenameMode.Keep)
-                        XiRename.RenameTo = EditorGUILayout.TextField("New CleanName:", XiRename.RenameTo);
+                        XiRename.CustomTargetName = EditorGUILayout.TextField("New CleanName:", XiRename.CustomTargetName);
                     break;
                 case ETokenType.Prefix:
                     OnGUI_Desinator($"[{idx}] Prefix Tool", XiRename.prefix);
@@ -256,7 +280,7 @@ namespace XiRenameTool.Editor
                     OnGUI_Desinator($"[{idx}] Variant Tool", XiRename.variant);
                     break;
                 case ETokenType.Suffix:
-                    OnGUI_Desinator($"[{idx}] Suffix Tool", XiRename.suffix);
+                    OnGUI_Desinator($"[{idx}] FileNumber Tool", XiRename.suffix);
                     break;
 
             }

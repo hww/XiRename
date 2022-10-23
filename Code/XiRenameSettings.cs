@@ -30,6 +30,8 @@ namespace XiRenameTool
         public int prefixPrecision = 2;
         /// <summary>The suffix default precision.</summary>
         public int suffixPrecision = 2;
+        /// <summary>True to add number to zero.</summary>
+        public bool AddNumberToZero;
         /// <summary>Full pathname of the ignore item.</summary>
         public string[] ignorePath;
 
@@ -90,15 +92,34 @@ namespace XiRenameTool
             {
                 if (type.Category == category)
                 {
-                    categories++;
                     result = type.ValidateName(item);
                     if (result == EFileState.Valid)
                         return result;
+                    if (result != EFileState.Undefined)
+                        categories++;
                 }
             }
             // Ignore all files without math category
-            return categories != 0 ? EFileState.Ignored : EFileState.Undefined;
+            return categories != 0 ? EFileState.Invalid : EFileState.Undefined;
         }
+
+        ///--------------------------------------------------------------------
+        /// <summary>Validates the ignorance.</summary>
+        ///
+        /// <param cleanName="item">The item descriptor.</param>
+        ///
+        /// <returns>An EFileState.</returns>
+        ///--------------------------------------------------------------------
+
+        public EFileState ValidateIgnorance(RenamableObject item)
+        {
+            if (!item.IsValid)
+                return EFileState.Invalid;
+            if (item.IsFile && IsIgnored(item.DirectoryPath))
+                return EFileState.Ignored;
+            return EFileState.Valid;
+        }
+
 
         ///--------------------------------------------------------------------
         /// <summary>Automatic validate name.</summary>
@@ -360,9 +381,10 @@ namespace XiRenameTool
             
             type = Define("Fonts/Defaults", ".ttf;.otf");
             type.DefinePreffix("F", "F");
-            
-            // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+            // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+            
+            type = Define("GameObjects/Defaults", ".*");
         }
 
         ///--------------------------------------------------------------------
