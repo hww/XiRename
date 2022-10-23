@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/hww/XiRename/compare/v1.1.1...v1.2.0) (2022-10-23)
+
+
+### Features
+
+* **code:** Added the unique name generator ([2f24553](https://github.com/hww/XiRename/commit/2f245539bff765bdb2139ad10bf9603c35094a53))
+
 ## [1.1.1](https://github.com/hww/XiRename/compare/v1.1.0...v1.1.1) (2022-10-20)
 
 
