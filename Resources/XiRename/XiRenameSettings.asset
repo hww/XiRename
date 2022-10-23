@@ -17,6 +17,7 @@ MonoBehaviour:
   namingConvention: 0
   prefixPrecision: 2
   suffixPrecision: 2
+  AddNumberToZero: 1
   ignorePath:
   - '*/External'
   - '*/Plugins'
